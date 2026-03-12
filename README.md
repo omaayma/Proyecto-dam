@@ -1,4 +1,4 @@
-NOMBRE DE PROYECTO
+FixExpress S.L
 
 Nuestro proyecto final de ciclo tiene como objetivo el desarrollo de una plataforma para la gestión de los talleres de reparación de vehículos. Estará compuesta por un lado, por una aplicación web destinada al personal del taller, y por otro lado, por una aplicación móvil orientada a los clientes. Amabas estarán conectadas a un mismo sistema de backend y base de datos.
 
