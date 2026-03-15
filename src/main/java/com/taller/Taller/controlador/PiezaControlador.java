@@ -1,0 +1,38 @@
+package com.taller.Taller.controlador;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import com.taller.Taller.modelo.Pieza;
+import com.taller.Taller.servicio.ServicioPieza;
+
+@RestController
+@RequestMapping("/piezas")
+public class PiezaControlador {
+
+@Autowired
+private ServicioPieza piezaServicio;
+
+@GetMapping
+public List<Pieza> listar(){
+	return piezaServicio.listar();
+}
+
+@PostMapping
+public Pieza guardar(@RequestBody Pieza pieza){
+	return piezaServicio.guardar(pieza);
+}
+
+@GetMapping("/{id}")
+public Pieza obtener(@PathVariable Long id){
+	return piezaServicio.obtener(id);
+}
+
+@DeleteMapping("/{id}")
+public void eliminar(@PathVariable Long id){
+	piezaServicio.eliminar(id);
+}
+
+}
