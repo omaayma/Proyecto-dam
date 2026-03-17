@@ -29,10 +29,15 @@ public Factura guardar(@RequestBody Factura factura){
 public Factura obtener(@PathVariable Long id){
 	return facturaServicio.obtener(id);
 }
+@PutMapping("/{id}")
+public Factura actualizar(@PathVariable Long id, @RequestBody Factura factura) {
+    factura.setId(id);
+    return facturaServicio.guardar(factura);
+}
 
 @DeleteMapping("/{id}")
-public void eliminar(@PathVariable Long id){
-	facturaServicio.eliminar(id);
+public void eliminar(@PathVariable Long id) {
+    facturaServicio.eliminar(id);
 }
 
 }

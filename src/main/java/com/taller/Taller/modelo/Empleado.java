@@ -13,10 +13,15 @@ public class Empleado {
     private Long id;
 
     private String nombre;
+    
+    @Column(unique = true, nullable = false)
+    private String dni;
+    
     private String puesto;
     private String telefono;
     private String email;
-
+    
+    
     public Empleado() {}
 
     public Empleado(String nombre, String puesto, String telefono, String email) {
@@ -43,8 +48,17 @@ public class Empleado {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
+    
 
-    public String getPuesto() {
+    public String getDni() {
+		return dni;
+	}
+
+	public void setDni(String dni) {
+		this.dni = dni;
+	}
+
+	public String getPuesto() {
         return puesto;
     }
 

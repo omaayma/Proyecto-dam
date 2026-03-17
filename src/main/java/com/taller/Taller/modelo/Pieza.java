@@ -2,6 +2,8 @@ package com.taller.Taller.modelo;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +23,7 @@ private double precio;
 private int stock;
 
 @ManyToMany(mappedBy = "piezas")
+@JsonIgnore
 private List<Factura> facturas;
 
 public Pieza(){}

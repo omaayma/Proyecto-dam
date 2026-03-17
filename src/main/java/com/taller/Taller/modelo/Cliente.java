@@ -14,10 +14,16 @@ public class Cliente {
 private Long id;
 
 private String nombre;
-private String apellido;
+private String apellidos;
+
+@Column(unique = true, nullable = false)
+private String dni;
+
 private String telefono;
 private String email;
 private String direccion;
+
+
 
 @OneToMany(mappedBy = "cliente")
 @JsonIgnore
@@ -41,12 +47,21 @@ public void setNombre(String nombre){
 	this.nombre=nombre;
 }
 
-public String getApellido(){
-	return apellido;
+
+public String getApellidos() {
+	return apellidos;
 }
 
-public void setApellido(String apellido){
-	this.apellido=apellido;
+public void setApellidos(String apellidos) {
+	this.apellidos = apellidos;
+}
+
+public String getDni() {
+	return dni;
+}
+
+public void setDni(String dni) {
+	this.dni = dni;
 }
 
 public String getTelefono(){
@@ -72,5 +87,7 @@ public String getDireccion(){
 public void setDireccion(String direccion){
 	this.direccion=direccion;
 }
+
+
 
 }

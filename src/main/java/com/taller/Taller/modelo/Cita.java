@@ -28,7 +28,6 @@ private String estado;
 
 @ManyToOne
 @JoinColumn(name = "vehiculo_id")
-@JsonIgnore
 private Vehiculo vehiculo;
 
 @ManyToOne
