@@ -14,6 +14,10 @@ public class ClienteControlador {
 
 @Autowired
 private ServicioCliente clienteServicio;
+@GetMapping("/panel")
+public String cliente(){
+    return "Panel cliente";
+}
 
 @GetMapping
 public List<Cliente> listar(){

@@ -23,11 +23,14 @@ private String telefono;
 private String email;
 private String direccion;
 
-
+private String rol = "CLIENTE";
 
 @OneToMany(mappedBy = "cliente")
 @JsonIgnore
 private List<Vehiculo> vehiculos;
+
+@ManyToOne
+private Administrador administrador;
 
 public Cliente(){}
 
@@ -86,6 +89,14 @@ public String getDireccion(){
 
 public void setDireccion(String direccion){
 	this.direccion=direccion;
+}
+
+public String getRol() {
+	return rol;
+}
+
+public void setRol(String rol) {
+	this.rol = rol;
 }
 
 

@@ -15,6 +15,11 @@ public class EmpleadoControlador {
 @Autowired
 private ServicioEmpleado empleadoServicio;
 
+@GetMapping("/panel")
+public String empleado(){
+    return "Panel empleado";
+}
+
 @GetMapping
 public List<Empleado> listar(){
 	return empleadoServicio.listar();

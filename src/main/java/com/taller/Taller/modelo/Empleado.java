@@ -21,6 +21,7 @@ public class Empleado {
     private String telefono;
     private String email;
     
+    private String rol = "EMPLEADO";
     
     public Empleado() {}
 
@@ -33,6 +34,9 @@ public class Empleado {
     @OneToMany(mappedBy = "empleado")
     @JsonIgnore
     private List<Cita> citas;
+    
+    @ManyToOne
+    private Administrador administrador;
 
     public void setId(Long id) {
         this.id = id;
@@ -81,4 +85,14 @@ public class Empleado {
     public void setEmail(String email) {
         this.email = email;
     }
+
+	public String getRol() {
+		return rol;
+	}
+
+	public void setRol(String rol) {
+		this.rol = rol;
+	}
+    
+    
 }
