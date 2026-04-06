@@ -1,16 +1,48 @@
-# React + Vite
+# Frontend – W&O AutoGroup
+ 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este directorio contiene el frontend del proyecto W&O AutoGroup, desarrollado como parte del Trabajo Fin de Ciclo (TFC) del ciclo formativo de Desarrollo de Aplicaciones Multiplataforma (DAM).
+ 
 
-Currently, two official plugins are available:
+El frontend está desarrollado con React utilizando Vite y se comunica con el backend mediante una API REST.
+ 
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
+ 
+## Tecnologías utilizadas
+- React
+- Vite
+- JavaScript
+- Axios
+- HTML y CSS
+- Node.js y npm
+ 
+---
+ 
+## Funcionalidad implementada
 
-## React Compiler
+Desde el frontend se pueden realizar las siguientes acciones mediante botones:
+ 
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Mostrar vehículos
+- Crear vehículos
+- Mostrar clientes
+- Crear clientes
+- Mostrar empleados
+- Crear empleados
+ 
 
-## Expanding the ESLint configuration
+Todas las operaciones se realizan mediante peticiones HTTP al backend y los datos se muestran en la interfaz web.
+ 
+---
+ 
+## Puesta en marcha del frontend
+ 
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Requisitos previos
+- Node.js
+- npm
+ 
+
+### Pasos para ejecutar el frontend
+ 
