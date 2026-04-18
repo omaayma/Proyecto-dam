@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Vehiculo;
 import com.taller.Taller.servicio.ServicioVehiculo;
 
 @RestController
-@RequestMapping("/vehiculos")
+@RequestMapping("api/vehiculos")
 public class VehiculoControlador {
 
 @Autowired

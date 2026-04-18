@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Factura;
 import com.taller.Taller.servicio.ServicioFactura;
 
 @RestController
-@RequestMapping("/facturas")
+@RequestMapping("api/facturas")
 public class FacturaControlador {
 
 @Autowired

@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Empleado;
 import com.taller.Taller.servicio.ServicioEmpleado;
 
 @RestController
-@RequestMapping("/empleados")
+@RequestMapping("api/empleados")
 public class EmpleadoControlador {
 
 @Autowired

@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Cita;
 import com.taller.Taller.servicio.ServicioCita;
 
 @RestController
-@RequestMapping("/citas")
+@RequestMapping("api/citas")
 public class CitaControlador {
 
 @Autowired

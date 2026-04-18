@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Pieza;
 import com.taller.Taller.servicio.ServicioPieza;
 
 @RestController
-@RequestMapping("/piezas")
+@RequestMapping("api/piezas")
 public class PiezaControlador {
 
 @Autowired

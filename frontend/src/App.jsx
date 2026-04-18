@@ -13,7 +13,7 @@ function App() {
 
   // ===== VEHÍCULOS =====
   const mostrarVehiculos = () => {
-    axios.get('/vehiculos')
+    axios.get('/api/vehiculos')
       .then(res => {
         setVehiculos(res.data)
         console.log('Vehículos:', res.data)
@@ -23,20 +23,18 @@ function App() {
  
 
   const crearVehiculo = () => {
-    axios.post('/vehiculos', {
+    axios.post('/api/vehiculos', {
       matricula: '1234ABC',
       marca: 'Toyota',
       modelo: 'Corolla',
       anio: 2020
-    }).then(() => {
-      mostrarVehiculos()
     })
   }
  
 
   // ===== CLIENTES =====
   const mostrarClientes = () => {
-    axios.get('/clientes')
+    axios.get('/api/clientes')
       .then(res => {
         setClientes(res.data)
         console.log('Clientes:', res.data)
@@ -46,21 +44,19 @@ function App() {
  
 
   const crearCliente = () => {
-    axios.post('/clientes', {
+    axios.post('/api/clientes', {
       nombre: 'Juan',
       apellidos: 'Pérez',
       dni: '12345678A',
       telefono: '600123456',
       email: 'juan.perez@email.com'
-    }).then(() => {
-      mostrarClientes()
     })
   }
  
 
   // EMPLEADOS
   const mostrarEmpleados = () => {
-    axios.get('/empleados')
+    axios.get('/api/empleados')
       .then(res => {
         setEmpleados(res.data)
         console.log('Empleados:', res.data)
@@ -70,14 +66,12 @@ function App() {
  
 
   const crearEmpleado = () => {
-    axios.post('/empleados', {
+    axios.post('/api/empleados', {
       nombre: 'Ana',
       dni: '87654321B',
       puesto: 'Mecánico',
       telefono: '600987654',
       email: 'ana.mecanico@email.com'
-    }).then(() => {
-      mostrarEmpleados()
     })
   }
  
@@ -113,7 +107,7 @@ function App() {
  
 
       {/* ===== LISTADOS ===== */}
-      <h2></h2>
+      <h2>Vehiculos</h2>
       <ul>
         {vehiculos.map(v => (
           <li key={v.id}>
@@ -123,7 +117,7 @@ function App() {
       </ul>
  
 
-      <h2></h2>
+      <h2>Clientes</h2>
       <ul>
         {clientes.map(c => (
           <li key={c.id}>

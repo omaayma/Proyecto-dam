@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Administrador;
 import com.taller.Taller.servicio.ServicioAdministrador;
 
 @RestController
-@RequestMapping("/administradores")
+@RequestMapping("api/administradores")
 @CrossOrigin(origins = "*")
 public class AdministradorControlador {
 

@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Presupuesto;
 import com.taller.Taller.servicio.ServicioPresupuesto;
 
 @RestController
-@RequestMapping("/presupuestos")
+@RequestMapping("api/presupuestos")
 public class PresupuestoControlador {
 
 @Autowired

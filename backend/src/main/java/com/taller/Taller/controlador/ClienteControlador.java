@@ -9,7 +9,7 @@ import com.taller.Taller.modelo.Cliente;
 import com.taller.Taller.servicio.ServicioCliente;
 
 @RestController
-@RequestMapping("/clientes")
+@RequestMapping("api/clientes")
 public class ClienteControlador {
 
 @Autowired
