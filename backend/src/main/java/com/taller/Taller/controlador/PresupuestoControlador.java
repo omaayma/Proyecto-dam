@@ -10,6 +10,7 @@ import com.taller.Taller.servicio.ServicioPresupuesto;
 
 @RestController
 @RequestMapping("api/presupuestos")
+@CrossOrigin(origins = "*")
 public class PresupuestoControlador {
 
 @Autowired

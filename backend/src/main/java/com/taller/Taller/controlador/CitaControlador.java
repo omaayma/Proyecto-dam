@@ -10,6 +10,7 @@ import com.taller.Taller.servicio.ServicioCita;
 
 @RestController
 @RequestMapping("api/citas")
+@CrossOrigin(origins = "*")
 public class CitaControlador {
 
 @Autowired

@@ -10,6 +10,7 @@ import com.taller.Taller.servicio.ServicioPieza;
 
 @RestController
 @RequestMapping("api/piezas")
+@CrossOrigin(origins = "*")
 public class PiezaControlador {
 
 @Autowired
@@ -30,6 +31,11 @@ public Pieza obtener(@PathVariable Long id){
 	return piezaServicio.obtener(id);
 }
 
+@PutMapping("/{id}")
+public Pieza actualizar(@PathVariable Long id, @RequestBody Pieza pieza){
+    pieza.setId(id);
+    return piezaServicio.guardar(pieza); // Asegúrate que tu servicio se llame 'servicio'
+    }
 @DeleteMapping("/{id}")
 public void eliminar(@PathVariable Long id){
 	piezaServicio.eliminar(id);

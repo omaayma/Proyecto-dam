@@ -13,7 +13,9 @@ public class Vehiculo {
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long id;
 
+@Column(unique = true)
 private String matricula;
+
 private String marca;
 private String modelo;
 private int anio;

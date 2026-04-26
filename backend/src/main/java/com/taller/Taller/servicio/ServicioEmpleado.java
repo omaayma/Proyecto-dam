@@ -1,33 +1,36 @@
 package com.taller.Taller.servicio;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.taller.Taller.modelo.Empleado;
 import com.taller.Taller.repositorio.RepositorioEmpleado;
 
 @Service
 public class ServicioEmpleado {
 
-@Autowired
-private RepositorioEmpleado empleadoRepositorio;
+    @Autowired
+    private RepositorioEmpleado repositorio;
 
-public List<Empleado> listar(){
-	return empleadoRepositorio.findAll();
-}
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-public Empleado guardar(Empleado empleado){
-	return empleadoRepositorio.save(empleado);
-}
+    public List<Empleado> listar() {
+        return repositorio.findAll();
+    }
 
-public Empleado obtener(Long id){
-	return empleadoRepositorio.findById(id).orElse(null);
-}
+    public Empleado guardar(Empleado empleado) {
+        // Encriptar la contraseña antes de guardar
+        empleado.setContrasena(passwordEncoder.encode(empleado.getContrasena()));
+        return repositorio.save(empleado);
+    }
 
-public void eliminar(Long id){
-	empleadoRepositorio.deleteById(id);
-}
+    public Empleado obtener(Long id) {
+        return repositorio.findById(id).orElse(null);
+    }
 
+    public void eliminar(Long id) {
+        repositorio.deleteById(id);
+    }
 }

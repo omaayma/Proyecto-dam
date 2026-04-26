@@ -10,6 +10,7 @@ import com.taller.Taller.servicio.ServicioFactura;
 
 @RestController
 @RequestMapping("api/facturas")
+@CrossOrigin(origins = "*")
 public class FacturaControlador {
 
 @Autowired

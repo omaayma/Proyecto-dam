@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import com.taller.Taller.modelo.Administrador;
 import com.taller.Taller.servicio.ServicioAdministrador;
 
@@ -35,6 +34,12 @@ public class AdministradorControlador {
     @GetMapping("/{id}")
     public Administrador obtener(@PathVariable Long id){
         return servicio.obtener(id);
+    }
+
+    @PutMapping("/{id}")
+    public Administrador actualizar(@PathVariable Long id, @RequestBody Administrador admin){
+        admin.setId(id);
+        return servicio.guardar(admin);
     }
 
     @DeleteMapping("/{id}")

@@ -10,6 +10,7 @@ import com.taller.Taller.servicio.ServicioEmpleado;
 
 @RestController
 @RequestMapping("api/empleados")
+@CrossOrigin(origins = "*")
 public class EmpleadoControlador {
 
 @Autowired
