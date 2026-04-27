@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── VARIABLES ───────────────────────────────────────────────────────────── */
+/* Nuestras variables */
 :root {
   --primary:      #111111;
   --primary-h:    #333333;
@@ -27,7 +27,7 @@
   --mono:         'DM Mono', monospace;
 }
 
-/* ── RESET ────────────────────────────────────────────────────────────────── */
+/* El RESET*/
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -39,7 +39,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── LAYOUT PRINCIPAL ─────────────────────────────────────────────────────── */
+/*Nuestro LAYOUT PRINCIPAL */
 .app-layout {
   display: flex;
   height: 100vh;
@@ -47,7 +47,7 @@ body {
   background: var(--bg-soft);
 }
 
-/* ── SIDEBAR ──────────────────────────────────────────────────────────────── */
+/* EL SIDEBAR*/
 .sidebar {
   width: var(--sidebar-w);
   background: var(--primary);
@@ -145,7 +145,7 @@ body {
 }
 .btn-logout:hover { background: rgba(220,38,38,.3); }
 
-/* ── MAIN ─────────────────────────────────────────────────────────────────── */
+/* PARA EL MAIN */
 .main-content {
   flex: 1;
   display: flex;
@@ -156,7 +156,7 @@ body {
   background: var(--bg-soft);
 }
 
-/* ── PAGE HEADER ──────────────────────────────────────────────────────────── */
+/*  PARA EL HEADER */
 .page-header {
   display: flex;
   align-items: center;
@@ -169,7 +169,7 @@ body {
   letter-spacing: -.5px;
 }
 
-/* ── BOTONES ──────────────────────────────────────────────────────────────── */
+/* DAMOS ESTILOS A NUESTROS BOTONES */
 .btn-primary {
   background: var(--primary);
   color: #fff;
@@ -225,7 +225,7 @@ body {
 }
 .btn-del:hover { background: #fef2f2; border-color: #fca5a5; }
 
-/* ── FORMULARIO ───────────────────────────────────────────────────────────── */
+/* EL FORMULARIO*/
 .form-card {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -287,7 +287,7 @@ input:focus, select:focus {
 }
 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
 
-/* ── TABLA ────────────────────────────────────────────────────────────────── */
+/* LA TABLA */
 .table-card {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -331,7 +331,6 @@ tbody tr:hover { background: var(--bg-hover); }
   font-size: 14px;
 }
 
-/* ── BADGES ───────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-block;
   padding: 3px 10px;
@@ -351,7 +350,7 @@ tbody tr:hover { background: var(--bg-hover); }
 .stock-low { color: var(--danger); font-weight: 600; }
 .stock-ok  { color: var(--success); font-weight: 600; }
 
-/* ── TOAST ────────────────────────────────────────────────────────────────── */
+/* PARA EL TOAST */
 .toast {
   position: fixed;
   top: 24px; right: 24px;
@@ -367,7 +366,7 @@ tbody tr:hover { background: var(--bg-hover); }
 .toast-err { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; }
 @keyframes slideIn { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
 
-/* ── AUTH ─────────────────────────────────────────────────────────────────── */
+/* EL AUTH */
 .auth-wrapper {
   min-height: 100vh;
   display: flex;
@@ -416,7 +415,7 @@ tbody tr:hover { background: var(--bg-hover); }
 }
 .auth-link span:hover { text-decoration: underline; }
 
-/* ── VISTA CLIENTE ────────────────────────────────────────────────────────── */
+/* LA VISTA DEL CLIENTE */
 .cliente-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

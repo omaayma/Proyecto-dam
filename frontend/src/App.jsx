@@ -31,7 +31,7 @@ function App() {
     setTimeout(() => setMsg(null), 3000)
   }
 
-  // ── LOGIN ──────────────────────────────────────────────────────────────────
+  // Para el login
   const handleLogin = (e) => {
     e.preventDefault()
     const cfg = { headers: { Authorization: `Basic ${btoa(session.auth.email + ':' + session.auth.pass)}` } }
@@ -62,7 +62,7 @@ function App() {
       })
   }
 
-  // ── REGISTRO DE CLIENTE ───────────────────────────────────────────────────
+  // REGISTRO DE CLIENTE
   const handleRegister = (e) => {
     e.preventDefault()
     axios.post('/api/clientes', regForm)
@@ -70,7 +70,7 @@ function App() {
       .catch(() => notify('Error al registrar. Comprueba que el DNI/email no exista.', 'err'))
   }
 
-  // ── CARGAR DATOS ──────────────────────────────────────────────────────────
+  // CARGAR DATOS
   const loadAux = (cfg) => {
     axios.get('/api/vehiculos', cfg).then(r => setVehiculos(r.data)).catch(() => {})
     axios.get('/api/empleados', cfg).then(r => setEmpleados(r.data)).catch(() => {})
@@ -105,7 +105,7 @@ function App() {
       .finally(() => setLoading(false))
   }
 
-  // ── GUARDAR (CREAR / EDITAR) ───────────────────────────────────────────────
+  // GUARDAR (CREAR / EDITAR)
   const onSave = (e) => {
     e.preventDefault()
     const config = api()
@@ -136,7 +136,7 @@ function App() {
     })
   }
 
-  // ── ELIMINAR ──────────────────────────────────────────────────────────────
+  // ELIMINAR
   const onDelete = (id) => {
     if (!window.confirm('¿Eliminar este registro?')) return
     axios.delete(`/api/${tab}/${id}`, api())
@@ -144,7 +144,7 @@ function App() {
       .catch(() => notify('Error al eliminar', 'err'))
   }
 
-  // ── EDITAR ────────────────────────────────────────────────────────────────
+  // EDITAR
   const onEdit = (item) => {
     setEditItem(item)
     setForm({ ...item })
@@ -152,7 +152,7 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // ── FORMULARIOS POR SECCIÓN ───────────────────────────────────────────────
+  // FORMULARIOS POR SECCIÓN
   const renderForm = () => {
     const f = form
     const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
@@ -242,7 +242,7 @@ function App() {
     }
   }
 
-  // ── TABLAS POR SECCIÓN ────────────────────────────────────────────────────
+  // TABLAS POR SECCIÓN
   const renderTable = () => {
     if (loading) return <p className="empty">Cargando...</p>
     if (!data.length) return <p className="empty">No hay registros.</p>
@@ -324,7 +324,7 @@ function App() {
     }
   }
 
-  // ── VISTA CLIENTE ─────────────────────────────────────────────────────────
+  // VISTA CLIENTE
   const renderClienteView = () => {
     const cfg = api()
     return (
@@ -364,7 +364,7 @@ function App() {
     )
   }
 
-  // ── RENDER PRINCIPAL ──────────────────────────────────────────────────────
+  // RENDER PRINCIPAL
   if (!session.logged) {
     return (
       <div className="auth-wrapper">
