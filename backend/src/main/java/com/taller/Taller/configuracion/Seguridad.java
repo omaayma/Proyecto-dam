@@ -37,7 +37,7 @@ public class Seguridad {
                         .requestMatchers("/api/administradores/**").hasRole("ADMIN")
 
                         // ✅ EMPLEADOS
-                        .requestMatchers("/api/empleados/**").hasAnyRole("ADMIN", "EMPLEADO")
+                        .requestMatchers("/api/empleados/**").permitAll()
 
                         // ✅ SOLO ADMIN y EMPLEADO acceden a datos internos
                         .requestMatchers("/api/vehiculos/**", "/api/citas/**")

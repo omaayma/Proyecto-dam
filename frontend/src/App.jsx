@@ -42,33 +42,68 @@ function App() {
   }
 
   // --- LOGIN ---
-  const handleLogin = (e) => {
-    e.preventDefault()
-    const cfg = api()
-    axios.get('/api/empleados', cfg)
-      .then(() => {
-        axios.get('/api/empleados', cfg).then(res => {
-          const match = res.data.find(em => em.email === session.auth.email)
-          const role = match?.rol === 'ADMIN' || session.auth.email === 'admin@wo.com' ? 'ADMIN' : 'EMPLEADO'
-          setSession(s => ({ ...s, logged: true, role }))
-          navigateTo('vehiculos', cfg)
-        })
-      })
-      .catch(() => {
-        axios.get('/api/clientes', cfg)
-          .then(res => {
-            const match = res.data.find(c => c.email === session.auth.email)
-            if (match) {
-              setSession(s => ({ ...s, logged: true, role: 'CLIENTE', clienteId: match.id }))
-              setData([match])
-              setTab('miPerfil')
-            } else {
-              notify('Credenciales incorrectas', 'err')
-            }
-          })
-          .catch(() => notify('Credenciales incorrectas', 'err'))
-      })
+  const handleLogin = async (e) => {
+  e.preventDefault()
+ 
+
+  try {
+    // 🔹 1. BUSCAR EMPLEADOS (sin auth)
+    const resEmp = await axios.get('/api/empleados')
+ 
+
+    const matchEmp = resEmp.data.find(
+      em => em.email === session.auth.email &&
+            em.contrasena === session.auth.pass
+    )
+ 
+
+    if (matchEmp) {
+      const role =
+        matchEmp.rol === 'ADMIN' || session.auth.email === 'admin@wo.com'
+          ? 'ADMIN'
+          : 'EMPLEADO'
+ 
+
+      setSession(s => ({ ...s, logged: true, role }))
+      navigateTo('vehiculos')
+      return
+    }
+ 
+
+    // 🔹 2. BUSCAR CLIENTES
+    const resCli = await axios.get('/api/clientes')
+ 
+
+    const matchCli = resCli.data.find(
+      c => c.email === session.auth.email &&
+           c.contrasena === session.auth.pass
+    )
+ 
+
+    if (matchCli) {
+      setSession(s => ({
+        ...s,
+        logged: true,
+        role: 'CLIENTE',
+        clienteId: matchCli.id
+      }))
+ 
+
+      setData([matchCli])
+      setTab('miPerfil')
+      return
+    }
+ 
+
+    // ❌ SI NO ENCUENTRA
+    notify('Credenciales incorrectas', 'err')
+ 
+
+  } catch (err) {
+    notify('Error al conectar con el servidor', 'err')
   }
+}
+
 
   // --- REGISTRO ---
  const handleRegister = (e) => {
