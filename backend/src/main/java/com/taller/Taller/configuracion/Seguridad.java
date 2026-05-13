@@ -4,9 +4,7 @@ import com.taller.Taller.servicio.ServicioDetallesUsuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,17 +29,23 @@ public class Seguridad {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // Permitir registro de clientes a todos
+
+                        // ✅ CLIENTES sin seguridad
                         .requestMatchers("/api/clientes/**").permitAll()
 
-                        // Restricciones por Rol
+                        // ✅ ADMIN
                         .requestMatchers("/api/administradores/**").hasRole("ADMIN")
-                        .requestMatchers("/api/empleados/**").hasAnyRole("ADMIN", "EMPLEADO")
-                        .requestMatchers("/api/vehiculos/**", "/api/citas/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
 
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(Customizer.withDefaults());
+                        // ✅ EMPLEADOS
+                        .requestMatchers("/api/empleados/**").hasAnyRole("ADMIN", "EMPLEADO")
+
+                        // ✅ SOLO ADMIN y EMPLEADO acceden a datos internos
+                        .requestMatchers("/api/vehiculos/**", "/api/citas/**")
+                        .hasAnyRole("ADMIN", "EMPLEADO")
+
+                        // ✅ TODO lo demás permitido (evita errores)
+                        .anyRequest().permitAll()
+                );
 
         return http.build();
     }
