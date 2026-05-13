@@ -4,7 +4,9 @@ import com.taller.Taller.servicio.ServicioDetallesUsuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -29,23 +31,17 @@ public class Seguridad {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-
-                        // ✅ CLIENTES sin seguridad
+                        // Permitir registro de clientes a todos
                         .requestMatchers("/api/clientes/**").permitAll()
 
-                        // ✅ ADMIN
+                        // Restricciones por Rol
                         .requestMatchers("/api/administradores/**").hasRole("ADMIN")
+                        .requestMatchers("/api/empleados/**").hasAnyRole("ADMIN", "EMPLEADO")
+                        .requestMatchers("/api/vehiculos/**", "/api/citas/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
 
-                        // ✅ EMPLEADOS
-                        .requestMatchers("/api/empleados/**").permitAll()
-
-                        // ✅ SOLO ADMIN y EMPLEADO acceden a datos internos
-                        .requestMatchers("/api/vehiculos/**", "/api/citas/**")
-                        .hasAnyRole("ADMIN", "EMPLEADO")
-
-                        // ✅ TODO lo demás permitido (evita errores)
-                        .anyRequest().permitAll()
-                );
+                        .anyRequest().authenticated()
+                )
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
