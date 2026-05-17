@@ -26,7 +26,8 @@ function Sidebar({ session, tab, setTab, logout }) {
   ]
 
   const clienteItems = [
-    ['dashboard', '🚘 Vehículos'],
+    ['dashboard', 'Inicio'],
+    ['vehiculos', '🚗 Vehículos'],
     ['citas', '📅 Citas'],
     ['presupuestos', '🧾 Presupuestos'],
     ['facturas', '📄 Facturas']

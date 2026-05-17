@@ -3,12 +3,18 @@
 import React from 'react'
 
 function ClienteView({
+  tab,
   cliente,
   vehiculos,
   citas,
   presupuestos,
   facturas
 }) {
+
+  const showVehiculos = tab === 'dashboard' || tab === 'vehiculos'
+  const showCitas = tab === 'dashboard' || tab === 'citas'
+  const showPresupuestos = tab === 'dashboard' || tab === 'presupuestos'
+  const showFacturas = tab === 'dashboard' || tab === 'facturas'
 
   return (
     <div className="cliente-view-wrapper">
@@ -19,9 +25,9 @@ function ClienteView({
 
       <div className="cliente-grid-layout">
 
-        {/* VEHICULOS */}
-
-        <div className="panel-seccion">
+        {/* VEHÍCULOS */}
+        {showVehiculos && (
+          <div className="panel-seccion">
 
           <h3>🚘 Mis Vehículos</h3>
 
@@ -46,10 +52,12 @@ function ClienteView({
           </div>
 
         </div>
+        )}
+
 
         {/* CITAS */}
-
-        <div className="panel-seccion">
+        {showCitas && (
+          <div className="panel-seccion">
 
           <h3>📅 Mis Citas</h3>
 
@@ -84,10 +92,12 @@ function ClienteView({
           </div>
 
         </div>
+        )}
 
         {/* PRESUPUESTOS */}
 
-        <div className="panel-seccion">
+        {showPresupuestos && (
+          <div className="panel-seccion">
 
           <h3>🧾 Mis Presupuestos</h3>
 
@@ -116,10 +126,12 @@ function ClienteView({
           </div>
 
         </div>
+        )}
 
         {/* FACTURAS */}
 
-        <div className="panel-seccion">
+        {showFacturas && (
+          <div className="panel-seccion">
 
           <h3>📄 Mis Facturas</h3>
 
@@ -148,6 +160,7 @@ function ClienteView({
           </div>
 
         </div>
+        )}
 
       </div>
 

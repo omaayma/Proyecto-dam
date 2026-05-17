@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import axios from 'axios'
 
 import './assets/App.css'
@@ -46,7 +46,7 @@ function App() {
   // =========================================
   // ESTADOS PRINCIPALES
   // =========================================
-  const [tab, setTab] = useState('vehiculos')
+  const [tab, setTab] = useState('')
   const [data, setData] = useState([])
   const [search, setSearch] = useState('')
 
@@ -79,8 +79,17 @@ function App() {
   // =========================================
   const [vehiculosCliente, setVehiculosCliente] = useState([])
   const [citasCliente, setCitasCliente] = useState([])
-
+  const [presupuestosCliente, setPresupuestosCliente] = useState([])
+  const [facturasCliente, setFacturasCliente] = useState([])
   const rol = sesion?.rol?.toUpperCase()
+
+  useEffect(() => {
+
+    if (rol === 'CLIENTE') {
+      setTab('dashboard')
+    }
+
+  }, [rol,sesion.logueado])
 
   // =========================================
   // TOAST
@@ -135,6 +144,28 @@ function App() {
             )
 
           setCitasCliente(filtradas)
+        })
+
+      axios.get('/api/presupuestos', authConfig())
+        .then(res => {
+
+          const filtrados =
+            res.data.filter(p =>
+              p?.cliente?.id === sesion.clienteId
+            )
+
+          setPresupuestosCliente(filtrados)
+        })
+
+      axios.get('/api/facturas', authConfig())
+        .then(res => {
+
+          const filtradas =
+            res.data.filter(f =>
+              f?.cliente?.id === sesion.clienteId
+            )
+
+          setFacturasCliente(filtradas)
         })
 
       return
@@ -207,7 +238,8 @@ function App() {
           auth: { email, pass }
         })
 
-        notify('Bienvenido')
+        notify('Te damos la bienvenida a W&O Autogroup, ' + emp.nombre)
+        setTab("")
       })
 
       .catch(() => {
@@ -232,7 +264,8 @@ function App() {
               auth: { email, pass }
             })
 
-            notify('Bienvenido')
+            notify('Te damos la bienvenida a W&O Autogroup, ' + cli.nombre)
+            setTab("")
           })
 
           .catch(() => {
@@ -280,6 +313,35 @@ function App() {
       .catch(() => {
         notify('Error al registrar', 'err')
       })
+  }
+
+
+  // =========================================
+  //PLANTILLA FORMULARIO
+  // =========================================
+
+  const emptyFormByTab=(t,rollUpper)=>{
+    //CLIENTE: Solo permitimos crear citas y vehiculos desde el dashboard, el resto de entidades las gestiona el empleado
+    if(rollUpper==="CLIENTE"){
+      if(t==="citas"){
+        return {
+          fecha: '',
+          hora: '',
+          descripcion: '',
+          estado: 'PENDIENTE',
+          vehiculoId: '',
+        }
+      }
+      if(t==="vehiculos"){
+        return {
+          matricula: '',
+          marca: '',
+          modelo: '',
+          anio: '',
+        }
+      }
+      return {}
+    }
   }
 
   // =========================================
@@ -347,88 +409,143 @@ function App() {
   // SAVE
   // =========================================
   const onSave = (e) => {
+  e.preventDefault()
+ 
 
-    e.preventDefault()
-
-    if (form.email && !validarEmail(form.email)) {
-      notify('Email inválido', 'err')
-      return
-    }
-
-    if (form.dni && !validarDni(form.dni)) {
-      notify('DNI inválido', 'err')
-      return
-    }
-
-    if (form.matricula && !validarMatricula(form.matricula)) {
-      notify('Matrícula inválida', 'err')
-      return
-    }
-
-    const body = { ...form }
-
-    if (body.vehiculoId) {
-      body.vehiculo = {
-        id: parseInt(body.vehiculoId)
-      }
-      delete body.vehiculoId
-    }
-
-    if (body.empleadoId) {
-      body.empleado = {
-        id: parseInt(body.empleadoId)
-      }
-      delete body.empleadoId
-    }
-
-    if (body.clienteId) {
-      body.cliente = {
-        id: parseInt(body.clienteId)
-      }
-      delete body.clienteId
-    }
-
-    if (body.presupuestoId) {
-      body.presupuesto = {
-        id: parseInt(body.presupuestoId)
-      }
-      delete body.presupuestoId
-    }
-
-    const req = editando
-
-      ? axios.put(
-          `/api/${tab}/${editando.id}`,
-          body,
-          authConfig()
-        )
-
-      : axios.post(
-          `/api/${tab}`,
-          body,
-          authConfig()
-        )
-
-    req.then(() => {
-
-      notify(
-        editando
-          ? 'Actualizado correctamente'
-          : 'Creado correctamente'
-      )
-
-      setMostrarForm(false)
-      setEditando(null)
-      setForm({})
-
-      axios.get(`/api/${tab}`, authConfig())
-        .then(res => setData(res.data))
-
-    }).catch(() => {
-      notify('Error al guardar', 'err')
-    })
+  if (form.email && !validarEmail(form.email)) {
+    notify('Email inválido', 'err')
+    return
   }
+ 
 
+  if (form.dni && !validarDni(form.dni)) {
+    notify('DNI inválido', 'err')
+    return
+  }
+ 
+
+  if (form.matricula && !validarMatricula(form.matricula)) {
+    notify('Matrícula inválida', 'err')
+    return
+  }
+ 
+
+  const body = { ...form }
+  console.log("BODY ANTES DE REGLAS EXTRA:", body)
+ 
+
+  // ==========================
+  // REGLAS EXTRA CLIENTE
+  // ==========================
+  if (rol === 'CLIENTE') {
+ 
+
+    // Vehículo: asignar SIEMPRE el cliente logueado
+    if (tab === 'vehiculos') {
+      body.cliente = { id: sesion.clienteId }
+    }
+ 
+
+    // Cita: validar que el vehiculo es suyo
+    if (tab === 'citas') {
+      const vehiculoSeleccionado = parseInt(body.vehiculoId || '0')
+      const esVehiculoValido = vehiculosCliente.some(v => v.id === vehiculoSeleccionado)
+ 
+
+      if (!esVehiculoValido) {
+        notify('Debes seleccionar uno de tus vehículos', 'err')
+        return
+      }
+ 
+
+      if (!body.estado) body.estado = 'PENDIENTE'
+    }
+    body.cliente = { id: sesion.clienteId }
+    body.empleado={
+      id: 1 // asignamos un empleado por defecto, ya que el cliente no puede elegirlo ni verlo  
+    }
+  }
+ 
+
+  // ==========================
+  // CONVERTIR IDs A OBJETOS
+  // ==========================
+  if (body.vehiculoId) {
+    body.vehiculo = { id: parseInt(body.vehiculoId) }
+    delete body.vehiculoId
+  }
+ 
+
+  if (body.empleadoId) {
+    body.empleado = { id: parseInt(body.empleadoId) }
+    delete body.empleadoId
+  }
+ 
+
+  if (body.clienteId) {
+    body.cliente = { id: parseInt(body.clienteId) }
+    delete body.clienteId
+  }
+ 
+
+  if (body.presupuestoId) {
+    body.presupuesto = { id: parseInt(body.presupuestoId) }
+    delete body.presupuestoId
+  }
+ 
+
+  // ==========================
+  // REQUEST (FUERA DEL IF)
+  // ==========================
+  const req = editando
+    ? axios.put(`/api/${tab}/${editando.id}`, body, authConfig())
+    : axios.post(`/api/${tab}`, body, authConfig())
+ 
+
+  req.then(() => {
+ 
+
+    notify(editando ? 'Actualizado correctamente' : 'Creado correctamente')
+ 
+
+    setMostrarForm(false)
+    setEditando(null)
+    setForm({})
+ 
+
+    // refresco según rol
+    if (rol === 'CLIENTE') {
+      if (tab === 'vehiculos') {
+        axios.get('/api/vehiculos', authConfig())
+          .then(res => {
+            const filtrados = res.data.filter(v => v?.cliente?.id === sesion.clienteId)
+            setVehiculosCliente(filtrados)
+          })
+      }
+ 
+
+      if (tab === 'citas') {
+        axios.get('/api/citas', authConfig())
+          .then(res => {
+            const filtradas = res.data.filter(c => c?.vehiculo?.cliente?.id === sesion.clienteId)
+            setCitasCliente(filtradas)
+          })
+      }
+ 
+
+      return
+    }
+ 
+
+    axios.get(`/api/${tab}`, authConfig())
+      .then(res => setData(res.data))
+ 
+
+  }).catch((err) => {
+    console.error(err)
+    notify('Error al guardar', 'err')
+  })
+}
   // =========================================
   // LOGOUT
   // =========================================
@@ -605,11 +722,114 @@ function App() {
 
         {rol === 'CLIENTE' ? (
 
-          <ClienteView
-            cliente={sesion}
-            vehiculos={vehiculosCliente}
-            citas={citasCliente}
-          />
+          <>
+
+            {(tab === "vehiculos" || tab === "citas") ? (
+              <>
+                <Header
+                  title={tab === "vehiculos" ? "Mis Vehículos" : "Mis Citas"}
+                  onNew={() => {
+                    console.log("CLICK NUEVO")
+                    setMostrarForm(true)
+                    setEditando(null)
+                    setForm(emptyFormByTab(tab,rol))
+                  }}
+              />
+              <Buscador
+                value={search}
+                onChange={setSearch}    
+              />
+              <div className="tabla-card">
+                {tab === "vehiculos" && (
+                  <Vehiculos
+                    data={vehiculosCliente}
+                    search={search}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                )}
+                {tab === "citas" && (
+                  <Citas
+                    data={citasCliente}
+                    search={search}   
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                )}
+              </div>
+
+              {/*FORMULARIO*/}
+              {mostrarForm && (
+                <div className="form-card">
+                  <form onSubmit={onSave}>
+                    <div className="form-grid">
+                      {Object.keys(form).map(key => {
+                        if (key === 'id') return null
+                        return (
+                          <div className="field" key={key}>
+                            <label>{key}</label>
+                            <input
+                              value={form[key] || ''}
+                              onChange={e => setForm(prev => ({
+                                ...prev,
+                                [key]: e.target.value
+                              }))}
+                            />
+                          </div>
+                        )
+                      })}
+
+                      {tab === 'citas' && (
+                        <>
+                          <div className="field">
+                            <label>Vehículos</label>
+                            <select
+                              value={form.vehiculoId || ''}
+                              onChange={e => setForm(prev => ({
+                                ...prev,
+                                vehiculoId: e.target.value
+                              }))}
+                            >
+                              <option value="">Selecciona un vehículo</option>
+                              {vehiculosCliente.map(vehiculo => (
+                                <option key={vehiculo.id} value={vehiculo.id}>
+                                  {vehiculo.marca} {vehiculo.modelo}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </>
+                      )}
+
+                    </div>
+                    <div className="form-actions">
+                      <button className='login-btn' 
+
+                      type="submit">
+                        Guardar
+                      </button>
+                      
+                    <button type="button" className="btn-cancel" onClick={() => setMostrarForm(false)}>
+                      Cancelar
+                    </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+              </>
+            ) : (
+
+              <ClienteView
+              tab={tab}
+              cliente={sesion}
+              vehiculos={vehiculosCliente}
+              citas={citasCliente}
+              presupuestos={presupuestosCliente}
+              facturas={facturasCliente}
+            />
+            )}
+
+          </>
 
         ) : (
 
@@ -619,7 +839,7 @@ function App() {
               onNew={() => {
                 setMostrarForm(true)
                 setEditando(null)
-                setForm({})
+                setForm(emptyFormByTab(tab,rol))
               }}
             />
 
@@ -745,7 +965,7 @@ function App() {
                               Selecciona vehículo
                             </option>
 
-                            {vehiculos.map(v => (
+                            {(rol === 'CLIENTE' ? vehiculosCliente : vehiculos).map(v => (
                               <option key={v.id} value={v.id}>
                                 {v.matricula}
                               </option>
