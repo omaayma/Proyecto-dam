@@ -1,15 +1,23 @@
+// Header.jsx
+
+import React from 'react'
+
 function Header({ title, onNew }) {
 
   return (
     <div className="page-header">
 
-      <h1>{title}</h1>
+      <div>
+        <h1>{title}</h1>
 
-      {onNew && (
-        <button className="btn-primary" onClick={onNew}>
-          + Nuevo
-        </button>
-      )}
+        <p className="page-subtitle">
+          Gestión del taller
+        </p>
+      </div>
+
+      <button className="btn-primary" onClick={onNew}>
+        + Nuevo
+      </button>
 
     </div>
   )

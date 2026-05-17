@@ -1,58 +1,154 @@
-function ClienteView({ cliente, vehiculos, citas }) {
+// ClienteView.jsx
+
+import React from 'react'
+
+function ClienteView({
+  cliente,
+  vehiculos,
+  citas,
+  presupuestos,
+  facturas
+}) {
 
   return (
-    <div className="cliente-grid">
+    <div className="cliente-view-wrapper">
 
-      <div className="cliente-section">
-        <h2>Mi perfil</h2>
-        <div className="info-list">
-          <div className="info-card">
-            <b>Nombre</b>
-            {/* CORREGIDO: Uso de ?. por seguridad */}
-            <span>{cliente?.nombre} {cliente?.apellidos}</span>
+      <h1 className="dashboard-welcome">
+        Bienvenido, {cliente?.nombre}
+      </h1>
+
+      <div className="cliente-grid-layout">
+
+        {/* VEHICULOS */}
+
+        <div className="panel-seccion">
+
+          <h3>🚘 Mis Vehículos</h3>
+
+          <div className="tarjetas-lista">
+
+            {vehiculos?.length > 0 ? (
+              vehiculos.map(v => (
+                <div className="tarjeta-dato" key={v.id}>
+                  <label>{v.matricula}</label>
+
+                  <span>
+                    {v.marca} {v.modelo} ({v.anio})
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="empty-text">
+                Sin registros.
+              </p>
+            )}
+
           </div>
 
-          <div className="info-card">
-            <b>Email</b>
-            <span>{cliente?.email}</span>
-          </div>
-
-          <div className="info-card">
-            <b>DNI</b>
-            <span>{cliente?.dni}</span>
-          </div>
-
-          <div className="info-card">
-            <b>Teléfono</b>
-            <span>{cliente?.telefono || 'No disponible'}</span>
-          </div>
         </div>
-      </div>
 
-      <div className="cliente-section">
-        <h2>Mis vehículos</h2>
-        <div className="info-list">
-          {/* CORREGIDO: Validar que vehiculos exista antes del map */}
-          {vehiculos && vehiculos.map(v => (
-            <div className="info-card" key={v.id}>
-              <b>{v.matricula}</b>
-              <span>{v.marca} {v.modelo}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* CITAS */}
 
-      <div className="cliente-section">
-        <h2>Mis citas</h2>
-        <div className="info-list">
-          {/* CORREGIDO: Validar que citas exista antes del map */}
-          {citas && citas.map(c => (
-            <div className="info-card" key={c.id}>
-              <b>{c.fecha} - {c.hora}</b>
-              <span>{c.estado}</span>
-            </div>
-          ))}
+        <div className="panel-seccion">
+
+          <h3>📅 Mis Citas</h3>
+
+          <div className="grid-citas">
+
+            {citas?.length > 0 ? (
+              citas.map(c => (
+                <div className="tarjeta-dato" key={c.id}>
+
+                  <label>
+                    {c.fecha} - {c.hora}
+                  </label>
+
+                  <span>
+                    {c.descripcion}
+                  </span>
+
+                  <div style={{ marginTop: '14px' }}>
+                    <span className={`badge badge-${c.estado?.toLowerCase()}`}>
+                      {c.estado}
+                    </span>
+                  </div>
+
+                </div>
+              ))
+            ) : (
+              <p className="empty-text">
+                Sin registros.
+              </p>
+            )}
+
+          </div>
+
         </div>
+
+        {/* PRESUPUESTOS */}
+
+        <div className="panel-seccion">
+
+          <h3>🧾 Mis Presupuestos</h3>
+
+          <div className="tarjetas-lista">
+
+            {presupuestos?.length > 0 ? (
+              presupuestos.map(p => (
+                <div className="tarjeta-dato" key={p.id}>
+
+                  <label>
+                    Presupuesto #{p.id}
+                  </label>
+
+                  <span>
+                    {p.total}€
+                  </span>
+
+                </div>
+              ))
+            ) : (
+              <p className="empty-text">
+                Sin registros.
+              </p>
+            )}
+
+          </div>
+
+        </div>
+
+        {/* FACTURAS */}
+
+        <div className="panel-seccion">
+
+          <h3>📄 Mis Facturas</h3>
+
+          <div className="tarjetas-lista">
+
+            {facturas?.length > 0 ? (
+              facturas.map(f => (
+                <div className="tarjeta-dato" key={f.id}>
+
+                  <label>
+                    Factura #{f.id}
+                  </label>
+
+                  <span>
+                    {f.total}€
+                  </span>
+
+                </div>
+              ))
+            ) : (
+              <p className="empty-text">
+                Sin registros.
+              </p>
+            )}
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
