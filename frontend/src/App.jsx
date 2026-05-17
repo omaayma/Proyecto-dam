@@ -1,412 +1,439 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css'
+
+import './assets/App.css'
+
+import Vehiculos from './components/Vehiculos'
+import Clientes from './components/Clientes'
+import Empleados from './components/Empleados'
+import Citas from './components/Citas'
+import Presupuestos from './components/Presupuestos'
+import Facturas from './components/Facturas'
+import Piezas from './components/Piezas'
+
+import Sidebar from './components/Sidebar'
+import Header from './components/Header'
+import Modal from './components/Modal'
+import Buscador from './components/Buscador'
+import ClienteView from './components/ClienteView'
+
+
+
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
 function App() {
-  const [session, setSession] = useState({ logged: false, role: '', auth: { email: '', pass: '' } })
-  const [view, setView] = useState('login')
-  const [tab, setTab] = useState('vehiculos')
-  const [data, setData] = useState([])
-  const [form, setForm] = useState({})
-  const [editItem, setEditItem] = useState(null)
-  const [showForm, setShowForm] = useState(false)
-  const [msg, setMsg] = useState(null)
-  const [loading, setLoading] = useState(false)
 
-  // Datos auxiliares para selects
-  const [vehiculos, setVehiculos] = useState([])
-  const [empleados, setEmpleados] = useState([])
-  const [clientes, setClientes] = useState([])
-  const [presupuestos, setPresupuestos] = useState([])
-  const [piezas, setPiezas] = useState([])
+  // =========================
+  // SESIÓN
+  // =========================
 
-  const [regForm, setRegForm] = useState({ nombre: '', apellidos: '', dni: '', email: '', telefono: '', direccion: '', contrasena: '' })
-
-  const api = () => ({
-    headers: { Authorization: `Basic ${btoa(session.auth.email + ':' + session.auth.pass)}` }
+  const [sesion, setSesion] = useState(() => {
+    const guardada = sessionStorage.getItem('sesion')
+    return guardada ? JSON.parse(guardada) : {
+      logueado: false,
+      rol: '',
+      auth: { email: '', pass: '' },
+      clienteId: null
+    }
   })
 
-  const notify = (text, type = 'ok') => {
-    setMsg({ text, type })
-    setTimeout(() => setMsg(null), 3000)
+  useEffect(() => {
+    sessionStorage.setItem('sesion', JSON.stringify(sesion))
+  }, [sesion])
+
+  // =========================
+  // VISTA
+  // FIX: antes siempre arrancaba en 'login' aunque hubiera sesión activa,
+  // por eso al recargar parecía que se cerraba la sesión
+  // =========================
+
+  const [vista, setVista] = useState(() => {
+    const guardada = sessionStorage.getItem('sesion')
+    if (guardada) {
+      const s = JSON.parse(guardada)
+      if (s.logueado) return 'app'
+    }
+    return 'login'
+  })
+
+  const [pestaña, setPestaña]       = useState('vehiculos')
+  const [datos, setDatos]           = useState([])
+  const [filtrados, setFiltrados]   = useState([])
+  const [cargando, setCargando]     = useState(false)
+  const [mensaje, setMensaje]       = useState(null)
+  const [mostrarForm, setMostrarForm] = useState(false)
+  const [itemEditar, setItemEditar] = useState(null)
+  const [mostrarModal, setMostrarModal] = useState(false)
+  const [idEliminar, setIdEliminar] = useState(null)
+
+  // =========================
+  // DATOS AUXILIARES
+  // =========================
+
+  const [vehiculos,    setVehiculos]    = useState([])
+  const [clientes,     setClientes]     = useState([])
+  const [empleados,    setEmpleados]    = useState([])
+  const [presupuestos, setPresupuestos] = useState([])
+  const [citasCliente, setCitasCliente] = useState([])
+
+  // =========================
+  // FORMULARIO
+  // =========================
+
+  const [form, setForm] = useState({})
+
+  const [formRegistro, setFormRegistro] = useState({
+    nombre: '', apellidos: '', dni: '', email: '',
+    telefono: '', direccion: '', contrasena: ''
+  })
+
+  // =========================
+  // CONFIGURACIÓN API
+  // =========================
+
+  const api = () => ({
+    headers: {
+      Authorization: `Basic ${btoa(sesion.auth.email + ':' + sesion.auth.pass)}`
+    }
+  })
+
+  // =========================
+  // NOTIFICACIONES
+  // =========================
+
+  const notificar = (texto, tipo = 'ok') => {
+    setMensaje({ texto, tipo })
+    setTimeout(() => setMensaje(null), 3500)
   }
 
-  // Para el login
+  // =========================
+  // VALIDACIONES
+  // FIX: antes se llamaba validarDni (no existía) y el registro no funcionaba
+  // =========================
+
+  const validarDniNie = (doc) => /^[XYZ0-9][0-9]{7}[A-Za-z]$/.test(doc)
+  const validarMatricula = (m) => /^[0-9]{4}[A-Z]{3}$/.test(m)
+  const validarEmail = (e) => /\S+@\S+\.\S+/.test(e)
+
+  // =========================
+  // CARGAR DATOS AUXILIARES
+  // =========================
+
+  const cargarAuxiliares = (cfg) => {
+    axios.get('/api/vehiculos',    cfg).then(r => setVehiculos(r.data)).catch(() => {})
+    axios.get('/api/clientes',     cfg).then(r => setClientes(r.data)).catch(() => {})
+    axios.get('/api/empleados',    cfg).then(r => setEmpleados(r.data)).catch(() => {})
+    axios.get('/api/presupuestos', cfg).then(r => setPresupuestos(r.data)).catch(() => {})
+  }
+
+  // =========================
+  // RECARGA DE PÁGINA
+  // FIX: si ya hay sesión guardada se recargan los datos automáticamente
+  // =========================
+
+  useEffect(() => {
+    if (!sesion.logueado) return
+
+    if (sesion.rol !== 'CLIENTE') {
+      navegarA(pestaña, api())
+    } else {
+      const cfg = api()
+      axios.get('/api/clientes', cfg).then(res => {
+        const encontrado = res.data.find(c => c.id === sesion.clienteId)
+        if (!encontrado) return
+        setDatos([encontrado])
+        axios.get('/api/citas', cfg).then(r => {
+          setCitasCliente(r.data.filter(c => c.vehiculo?.cliente?.id === encontrado.id))
+        }).catch(() => {})
+        axios.get('/api/vehiculos', cfg).then(r => {
+          setVehiculos(r.data.filter(v => v.cliente?.id === encontrado.id))
+        }).catch(() => {})
+      }).catch(() => {})
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // =========================
+  // LOGIN
+  // =========================
+
   const handleLogin = (e) => {
     e.preventDefault()
-    const cfg = { headers: { Authorization: `Basic ${btoa(session.auth.email + ':' + session.auth.pass)}` } }
+    const cfg = api()
+
     axios.get('/api/empleados', cfg)
-      .then(() => {
-        // Si llega aquí es ADMIN o EMPLEADO: preguntamos al backend quién es
-        axios.get('/api/empleados', cfg).then(res => {
-          const match = res.data.find(em => em.email === session.auth.email)
-          const role = match?.rol === 'ADMIN' || session.auth.email === 'admin@wo.com' ? 'ADMIN' : 'EMPLEADO'
-          setSession(s => ({ ...s, logged: true, role }))
-          navigateTo('vehiculos', cfg)
-        })
+      .then(res => {
+        const encontrado = res.data.find(emp => emp.email === sesion.auth.email)
+        if (!encontrado) { notificar('Credenciales incorrectas', 'err'); return }
+
+        const rol = encontrado.rol === 'ADMIN' ? 'ADMIN' : 'EMPLEADO'
+        const ns  = { ...sesion, logueado: true, rol }
+        setSesion(ns)
+        sessionStorage.setItem('sesion', JSON.stringify(ns))
+        setVista('app')
+        navegarA('vehiculos', cfg)
       })
       .catch(() => {
-        // Puede ser cliente
         axios.get('/api/clientes', cfg)
           .then(res => {
-            const match = res.data.find(c => c.email === session.auth.email)
-            if (match) {
-              setSession(s => ({ ...s, logged: true, role: 'CLIENTE', clienteId: match.id }))
-              setData([match])
-              setTab('miPerfil')
-            } else {
-              alert('Credenciales incorrectas')
-            }
+            const encontrado = res.data.find(c => c.email === sesion.auth.email)
+            if (!encontrado) { notificar('Credenciales incorrectas', 'err'); return }
+
+            const ns = { ...sesion, logueado: true, rol: 'CLIENTE', clienteId: encontrado.id }
+            setSesion(ns)
+            sessionStorage.setItem('sesion', JSON.stringify(ns))
+            setDatos([encontrado])
+
+            axios.get('/api/citas', cfg).then(r => {
+              setCitasCliente(r.data.filter(c => c.vehiculo?.cliente?.id === encontrado.id))
+            }).catch(() => {})
+            axios.get('/api/vehiculos', cfg).then(r => {
+              setVehiculos(r.data.filter(v => v.cliente?.id === encontrado.id))
+            }).catch(() => {})
+
+            setVista('app')
+            setPestaña('cliente')
           })
-          .catch(() => alert('Credenciales incorrectas'))
+          .catch(() => notificar('Credenciales incorrectas', 'err'))
       })
   }
 
-  // REGISTRO DE CLIENTE
-  const handleRegister = (e) => {
+  // =========================
+  // REGISTRO
+  // FIX: el botón Registrarme no hacía nada porque llamaba a validarDni
+  // (función inexistente) → corregido a validarDniNie
+  // =========================
+
+  const handleRegistro = (e) => {
     e.preventDefault()
-    axios.post('/api/clientes', regForm)
-      .then(() => { notify('Cuenta creada. Ya puedes iniciar sesión.'); setView('login') })
-      .catch(() => notify('Error al registrar. Comprueba que el DNI/email no exista.', 'err'))
-  }
 
-  // CARGAR DATOS
-  const loadAux = (cfg) => {
-    axios.get('/api/vehiculos', cfg).then(r => setVehiculos(r.data)).catch(() => {})
-    axios.get('/api/empleados', cfg).then(r => setEmpleados(r.data)).catch(() => {})
-    axios.get('/api/clientes', cfg).then(r => setClientes(r.data)).catch(() => {})
-    axios.get('/api/presupuestos', cfg).then(r => setPresupuestos(r.data)).catch(() => {})
-    axios.get('/api/piezas', cfg).then(r => setPiezas(r.data)).catch(() => {})
-  }
-
-  const navigateTo = (newTab, cfg) => {
-    setTab(newTab)
-    setForm({})
-    setEditItem(null)
-    setShowForm(false)
-    const config = cfg || api()
-    setLoading(true)
-
-    // Para cliente: solo sus propios datos
-    if (session.role === 'CLIENTE' || newTab === 'miPerfil') {
-      setLoading(false); return
+    if (!validarDniNie(formRegistro.dni)) {
+      notificar('DNI/NIE inválido — formato: letra o número + 7 dígitos + letra', 'err')
+      return
+    }
+    if (!validarEmail(formRegistro.email)) {
+      notificar('Email inválido', 'err')
+      return
     }
 
-    const endpointMap = {
+    axios.post('/api/clientes', formRegistro)
+      .then(() => {
+        notificar('Cuenta creada. Ya puedes iniciar sesión.')
+        setVista('login')
+        setFormRegistro({ nombre: '', apellidos: '', dni: '', email: '', telefono: '', direccion: '', contrasena: '' })
+      })
+      .catch(err => {
+        if (err.response?.status === 409 || err.response?.status === 400) {
+          notificar('El DNI/NIE o email ya están registrados', 'err')
+        } else {
+          notificar('Error al registrar. Inténtalo de nuevo.', 'err')
+        }
+      })
+  }
+
+  // =========================
+  // NAVEGACIÓN
+  // =========================
+
+  const navegarA = (nuevaPestaña, cfg) => {
+    setPestaña(nuevaPestaña)
+    setMostrarForm(false)
+    setItemEditar(null)
+    setCargando(true)
+
+    const mapaEndpoints = {
       vehiculos: 'vehiculos', clientes: 'clientes', empleados: 'empleados',
       citas: 'citas', presupuestos: 'presupuestos', facturas: 'facturas', piezas: 'piezas'
     }
-    const endpoint = endpointMap[newTab]
-    if (!endpoint) { setLoading(false); return }
 
-    axios.get(`/api/${endpoint}`, config)
-      .then(r => { setData(r.data); loadAux(config) })
-      .catch(() => setData([]))
-      .finally(() => setLoading(false))
+    const endpoint = mapaEndpoints[nuevaPestaña]
+    if (!endpoint) { setCargando(false); return }
+
+    axios.get(`/api/${endpoint}`, cfg || api())
+      .then(r => { setDatos(r.data); setFiltrados(r.data); cargarAuxiliares(cfg || api()) })
+      .catch(() => setDatos([]))
+      .finally(() => setCargando(false))
   }
 
-  // GUARDAR (CREAR / EDITAR)
-  const onSave = (e) => {
+  // =========================
+  // BÚSQUEDA
+  // =========================
+
+  const handleBusqueda = (valor) => {
+    const v = valor.toLowerCase()
+    setFiltrados(datos.filter(item => JSON.stringify(item).toLowerCase().includes(v)))
+  }
+
+  // =========================
+  // GUARDAR
+  // =========================
+
+  const guardar = (e) => {
     e.preventDefault()
-    const config = api()
-    const endpoint = tab
 
-    const buildBody = () => {
-      const f = { ...form }
-      // Inyectar objetos relacionados si se envían IDs
-      if (f.vehiculoId) { f.vehiculo = { id: parseInt(f.vehiculoId) }; delete f.vehiculoId }
-      if (f.empleadoId) { f.empleado = { id: parseInt(f.empleadoId) }; delete f.empleadoId }
-      if (f.clienteId)  { f.cliente  = { id: parseInt(f.clienteId)  }; delete f.clienteId }
-      if (f.presupuestoId) { f.presupuesto = { id: parseInt(f.presupuestoId) }; delete f.presupuestoId }
-      return f
-    }
+    if (form.dni       && !validarDniNie(form.dni))         { notificar('DNI/NIE inválido', 'err'); return }
+    if (form.email     && !validarEmail(form.email))         { notificar('Email inválido', 'err'); return }
+    if (form.matricula && !validarMatricula(form.matricula)) { notificar('Matrícula inválida — 4 números + 3 letras mayúsculas', 'err'); return }
 
-    const body = buildBody()
-    const req = editItem
-      ? axios.put(`/api/${endpoint}/${editItem.id}`, body, config)
-      : axios.post(`/api/${endpoint}`, body, config)
+    const cuerpo = { ...form }
+    if (cuerpo.vehiculoId)    { cuerpo.vehiculo    = { id: parseInt(cuerpo.vehiculoId) };    delete cuerpo.vehiculoId }
+    if (cuerpo.empleadoId)    { cuerpo.empleado    = { id: parseInt(cuerpo.empleadoId) };    delete cuerpo.empleadoId }
+    if (cuerpo.clienteId)     { cuerpo.cliente     = { id: parseInt(cuerpo.clienteId) };     delete cuerpo.clienteId }
+    if (cuerpo.presupuestoId) { cuerpo.presupuesto = { id: parseInt(cuerpo.presupuestoId) }; delete cuerpo.presupuestoId }
 
-    req.then(() => {
-      notify(editItem ? 'Actualizado correctamente' : 'Creado correctamente')
-      setEditItem(null)
-      setShowForm(false)
-      navigateTo(tab)
-    }).catch(err => {
-      notify('Error al guardar: ' + (err.response?.data?.message || err.message), 'err')
-    })
+    const peticion = itemEditar
+      ? axios.put(`/api/${pestaña}/${itemEditar.id}`, cuerpo, api())
+      : axios.post(`/api/${pestaña}`, cuerpo, api())
+
+    peticion
+      .then(() => { notificar(itemEditar ? 'Actualizado correctamente' : 'Creado correctamente'); setMostrarForm(false); navegarA(pestaña) })
+      .catch(() => notificar('Error al guardar', 'err'))
   }
 
+  // =========================
   // ELIMINAR
-  const onDelete = (id) => {
-    if (!window.confirm('¿Eliminar este registro?')) return
-    axios.delete(`/api/${tab}/${id}`, api())
-      .then(() => { notify('Eliminado'); navigateTo(tab) })
-      .catch(() => notify('Error al eliminar', 'err'))
+  // =========================
+
+  const eliminar = (id) => { setIdEliminar(id); setMostrarModal(true) }
+
+  const confirmarEliminacion = () => {
+    axios.delete(`/api/${pestaña}/${idEliminar}`, api())
+      .then(() => { notificar('Eliminado correctamente'); navegarA(pestaña) })
+      .catch(() => notificar('Error al eliminar', 'err'))
+    setMostrarModal(false)
   }
 
+  // =========================
   // EDITAR
-  const onEdit = (item) => {
-    setEditItem(item)
-    setForm({ ...item })
-    setShowForm(true)
+  // FIX citas: al editar, los selects de vehículo y empleado
+  // ahora muestran el valor guardado (se extraen los IDs de los objetos)
+  // =========================
+
+  const editar = (item) => {
+    setItemEditar(item)
+    setForm({
+      ...item,
+      vehiculoId:    item.vehiculo?.id    ?? '',
+      empleadoId:    item.empleado?.id    ?? '',
+      clienteId:     item.cliente?.id     ?? '',
+      presupuestoId: item.presupuesto?.id ?? ''
+    })
+    setMostrarForm(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // FORMULARIOS POR SECCIÓN
-  const renderForm = () => {
-    const f = form
-    const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
+  // =========================
+  // CERRAR SESIÓN
+  // =========================
 
-    const Input = ({ k, label, type = 'text', req = true }) => (
-      <div className="field">
-        <label>{label}</label>
-        <input type={type} value={f[k] || ''} onChange={e => set(k, e.target.value)} required={req} placeholder={label} />
-      </div>
-    )
-
-    const Select = ({ k, label, options, req = true }) => (
-      <div className="field">
-        <label>{label}</label>
-        <select value={f[k] || ''} onChange={e => set(k, e.target.value)} required={req}>
-          <option value="">-- Seleccionar --</option>
-          {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-      </div>
-    )
-
-    switch (tab) {
-      case 'vehiculos': return (
-        <>
-          <Input k="matricula" label="Matrícula" />
-          <Input k="marca" label="Marca" />
-          <Input k="modelo" label="Modelo" />
-          <Input k="anio" label="Año" type="number" />
-          <Select k="clienteId" label="Cliente" options={clientes.map(c => ({ value: c.id, label: `${c.nombre} ${c.apellidos || ''} (${c.dni})` }))} req={false} />
-        </>
-      )
-      case 'clientes': return (
-        <>
-          <Input k="nombre" label="Nombre" />
-          <Input k="apellidos" label="Apellidos" />
-          <Input k="dni" label="DNI" />
-          <Input k="email" label="Email" type="email" />
-          <Input k="telefono" label="Teléfono" req={false} />
-          <Input k="direccion" label="Dirección" req={false} />
-          <Input k="contrasena" label="Contraseña" type="password" req={!editItem} />
-        </>
-      )
-      case 'empleados': return (
-        <>
-          <Input k="nombre" label="Nombre" />
-          <Input k="dni" label="DNI" />
-          <Input k="email" label="Email" type="email" />
-          <Input k="puesto" label="Puesto" req={false} />
-          <Input k="telefono" label="Teléfono" req={false} />
-          <Input k="contrasena" label="Contraseña" type="password" req={!editItem} />
-        </>
-      )
-      case 'citas': return (
-        <>
-          <Input k="fecha" label="Fecha" type="date" />
-          <Input k="hora" label="Hora" type="time" />
-          <Input k="descripcion" label="Descripción" req={false} />
-          <Select k="estado" label="Estado" options={['PENDIENTE','CONFIRMADA','CANCELADA','COMPLETADA'].map(v=>({value:v,label:v}))} />
-          <Select k="vehiculoId" label="Vehículo" options={vehiculos.map(v => ({ value: v.id, label: `${v.matricula} – ${v.marca} ${v.modelo}` }))} />
-          <Select k="empleadoId" label="Empleado" options={empleados.map(e => ({ value: e.id, label: `${e.nombre} (${e.puesto || 'Sin puesto'})` }))} req={false} />
-        </>
-      )
-      case 'presupuestos': return (
-        <>
-          <Input k="fecha" label="Fecha" type="date" />
-          <Input k="total" label="Total (€)" type="number" />
-          <Select k="estado" label="Estado" options={['PENDIENTE','ACEPTADO','RECHAZADO'].map(v=>({value:v,label:v}))} />
-          <Select k="vehiculoId" label="Vehículo" options={vehiculos.map(v => ({ value: v.id, label: `${v.matricula} – ${v.marca} ${v.modelo}` }))} />
-        </>
-      )
-      case 'facturas': return (
-        <>
-          <Input k="fecha" label="Fecha" type="date" />
-          <Input k="total" label="Total (€)" type="number" />
-          <Select k="presupuestoId" label="Presupuesto" options={presupuestos.map(p => ({ value: p.id, label: `#${p.id} – ${p.total}€ (${p.estado})` }))} req={false} />
-        </>
-      )
-      case 'piezas': return (
-        <>
-          <Input k="nombre" label="Nombre" />
-          <Input k="descripcion" label="Descripción" req={false} />
-          <Input k="precio" label="Precio (€)" type="number" />
-          <Input k="stock" label="Stock" type="number" />
-        </>
-      )
-      default: return null
-    }
+  const cerrarSesion = () => {
+    sessionStorage.removeItem('sesion')
+    setSesion({ logueado: false, rol: '', auth: { email: '', pass: '' }, clienteId: null })
+    setVista('login')
   }
 
-  // TABLAS POR SECCIÓN
-  const renderTable = () => {
-    if (loading) return <p className="empty">Cargando...</p>
-    if (!data.length) return <p className="empty">No hay registros.</p>
+  // =========================
+  // CAMPOS FIJOS POR SECCIÓN
+  // FIX pérdida de foco: antes los inputs se generaban con Object.keys(form).map()
+  // React destruía y recreaba los nodos en cada render → se perdía el foco al escribir.
+  // Con campos fijos, React reutiliza el mismo nodo DOM y el foco se mantiene.
+  // =========================
 
-    const acciones = (item) => (
-      <td className="acciones">
-        <button className="btn-edit" onClick={() => onEdit(item)}>✏️ Editar</button>
-        <button className="btn-del" onClick={() => onDelete(item.id)}>🗑️</button>
-      </td>
-    )
-
-    switch (tab) {
-      case 'vehiculos': return (
-        <table><thead><tr><th>Matrícula</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Cliente</th><th></th></tr></thead>
-          <tbody>{data.map(v => <tr key={v.id}>
-            <td><b>{v.matricula}</b></td><td>{v.marca}</td><td>{v.modelo}</td><td>{v.anio}</td>
-            <td>{v.cliente ? `${v.cliente.nombre} ${v.cliente.apellidos||''}` : '—'}</td>
-            {acciones(v)}
-          </tr>)}</tbody>
-        </table>
-      )
-      case 'clientes': return (
-        <table><thead><tr><th>Nombre</th><th>Apellidos</th><th>DNI</th><th>Email</th><th>Teléfono</th><th></th></tr></thead>
-          <tbody>{data.map(c => <tr key={c.id}>
-            <td>{c.nombre}</td><td>{c.apellidos}</td><td>{c.dni}</td><td>{c.email}</td><td>{c.telefono||'—'}</td>
-            {acciones(c)}
-          </tr>)}</tbody>
-        </table>
-      )
-      case 'empleados': return (
-        <table><thead><tr><th>Nombre</th><th>DNI</th><th>Puesto</th><th>Email</th><th></th></tr></thead>
-          <tbody>{data.map(e => <tr key={e.id}>
-            <td>{e.nombre}</td><td>{e.dni}</td><td>{e.puesto||'—'}</td><td>{e.email}</td>
-            {acciones(e)}
-          </tr>)}</tbody>
-        </table>
-      )
-      case 'citas': return (
-        <table><thead><tr><th>Fecha</th><th>Hora</th><th>Vehículo</th><th>Empleado</th><th>Estado</th><th></th></tr></thead>
-          <tbody>{data.map(c => <tr key={c.id}>
-            <td>{c.fecha}</td><td>{c.hora}</td>
-            <td>{c.vehiculo ? `${c.vehiculo.matricula}` : '—'}</td>
-            <td>{c.empleado ? c.empleado.nombre : '—'}</td>
-            <td><span className={`badge badge-${c.estado?.toLowerCase()}`}>{c.estado}</span></td>
-            {acciones(c)}
-          </tr>)}</tbody>
-        </table>
-      )
-      case 'presupuestos': return (
-        <table><thead><tr><th>Fecha</th><th>Total</th><th>Estado</th><th>Vehículo</th><th></th></tr></thead>
-          <tbody>{data.map(p => <tr key={p.id}>
-            <td>{p.fecha}</td><td><b>{p.total}€</b></td>
-            <td><span className={`badge badge-${p.estado?.toLowerCase()}`}>{p.estado}</span></td>
-            <td>{p.vehiculo ? p.vehiculo.matricula : '—'}</td>
-            {acciones(p)}
-          </tr>)}</tbody>
-        </table>
-      )
-      case 'facturas': return (
-        <table><thead><tr><th>Fecha</th><th>Total</th><th>Presupuesto</th><th></th></tr></thead>
-          <tbody>{data.map(f => <tr key={f.id}>
-            <td>{f.fecha}</td><td><b>{f.total}€</b></td>
-            <td>{f.presupuesto ? `#${f.presupuesto.id}` : '—'}</td>
-            {acciones(f)}
-          </tr>)}</tbody>
-        </table>
-      )
-      case 'piezas': return (
-        <table><thead><tr><th>Nombre</th><th>Descripción</th><th>Stock</th><th>Precio</th><th></th></tr></thead>
-          <tbody>{data.map(p => <tr key={p.id}>
-            <td>{p.nombre}</td><td>{p.descripcion||'—'}</td>
-            <td><span className={p.stock < 5 ? 'stock-low' : 'stock-ok'}>{p.stock} uds</span></td>
-            <td>{p.precio}€</td>
-            {acciones(p)}
-          </tr>)}</tbody>
-        </table>
-      )
-      default: return null
-    }
+  const camposPorPestaña = {
+    clientes:     ['nombre','apellidos','dni','email','telefono','direccion','contrasena'],
+    empleados:    ['nombre','dni','puesto','telefono','email','contrasena'],
+    vehiculos:    ['matricula','marca','modelo','anio','color'],
+    citas:        ['fecha','hora','motivo','estado'],
+    presupuestos: ['descripcion','total','estado'],
+    facturas:     ['fecha','total'],
+    piezas:       ['nombre','referencia','cantidad','precio','stockMinimo']
   }
 
-  // VISTA CLIENTE
-  const renderClienteView = () => {
-    const cfg = api()
-    return (
-      <div className="cliente-grid">
-        <section className="cliente-section">
-          <h2>🚗 Mis Vehículos</h2>
-          <ClienteSection endpoint="vehiculos" cfg={cfg} render={v =>
-            <div className="info-card" key={v.id}><b>{v.matricula}</b><span>{v.marca} {v.modelo} ({v.anio})</span></div>
-          } />
-        </section>
-        <section className="cliente-section">
-          <h2>📅 Mis Citas</h2>
-          <ClienteSection endpoint="citas" cfg={cfg} render={c =>
-            <div className="info-card" key={c.id}>
-              <b>{c.fecha} {c.hora}</b>
-              <span>{c.descripcion||'Sin descripción'}</span>
-              <span className={`badge badge-${c.estado?.toLowerCase()}`}>{c.estado}</span>
-            </div>
-          } />
-        </section>
-        <section className="cliente-section">
-          <h2>📋 Mis Presupuestos</h2>
-          <ClienteSection endpoint="presupuestos" cfg={cfg} render={p =>
-            <div className="info-card" key={p.id}>
-              <b>{p.fecha} — {p.total}€</b>
-              <span className={`badge badge-${p.estado?.toLowerCase()}`}>{p.estado}</span>
-            </div>
-          } />
-        </section>
-        <section className="cliente-section">
-          <h2>🧾 Mis Facturas</h2>
-          <ClienteSection endpoint="facturas" cfg={cfg} render={f =>
-            <div className="info-card" key={f.id}><b>{f.fecha}</b><span>{f.total}€</span></div>
-          } />
-        </section>
-      </div>
-    )
+  const etiquetas = {
+    nombre:'Nombre', apellidos:'Apellidos', dni:'DNI / NIE', email:'Email',
+    telefono:'Teléfono', direccion:'Dirección', contrasena:'Contraseña',
+    puesto:'Puesto', matricula:'Matrícula', marca:'Marca', modelo:'Modelo',
+    anio:'Año', color:'Color', fecha:'Fecha', hora:'Hora', motivo:'Motivo',
+    estado:'Estado', descripcion:'Descripción', total:'Total €',
+    referencia:'Referencia', cantidad:'Cantidad', precio:'Precio €',
+    stockMinimo:'Stock mínimo'
   }
 
-  // RENDER PRINCIPAL
-  if (!session.logged) {
+  const camposActuales = camposPorPestaña[pestaña] || []
+
+  // =========================
+  // VISTA LOGIN / REGISTRO
+  // =========================
+
+  if (!sesion.logueado) {
     return (
       <div className="auth-wrapper">
         <div className="auth-card">
-          <div className="auth-logo">W<span>&</span>O</div>
-          <p className="auth-sub">Taller Mecánico</p>
-          {msg && <div className={`toast toast-${msg.type}`}>{msg.text}</div>}
 
-          {view === 'login' ? (
+          <div className="auth-logo">
+            W<span>&amp;</span>O
+          </div>
+          <p className="auth-marca">Taller Mecánico</p>
+
+          {mensaje && (
+            <div className={`toast toast-${mensaje.tipo}`}>{mensaje.texto}</div>
+          )}
+
+          {vista !== 'register' ? (
             <>
-              <h2 className="auth-title">Iniciar sesión</h2>
-              <form onSubmit={handleLogin}>
+              <h2 className="auth-titulo">Iniciar sesión</h2>
+              <form onSubmit={handleLogin} className="auth-form">
+
                 <div className="field">
                   <label>Email</label>
-                  <input type="email" placeholder="tu@email.com" required
-                    onChange={e => setSession(s => ({ ...s, auth: { ...s.auth, email: e.target.value } }))} />
+                  <input type="email" required placeholder="tu@email.com"
+                    value={sesion.auth.email}
+                    onChange={e => setSesion(s => ({ ...s, auth: { ...s.auth, email: e.target.value } }))}
+                  />
                 </div>
+
                 <div className="field">
                   <label>Contraseña</label>
-                  <input type="password" placeholder="••••••••" required
-                    onChange={e => setSession(s => ({ ...s, auth: { ...s.auth, pass: e.target.value } }))} />
+                  <input type="password" required placeholder="••••••••"
+                    value={sesion.auth.pass}
+                    onChange={e => setSesion(s => ({ ...s, auth: { ...s.auth, pass: e.target.value } }))}
+                  />
                 </div>
-                <button className="btn-primary" type="submit">Acceder</button>
-                <p className="auth-link">¿Cliente nuevo? <span onClick={() => setView('register')}>Crear cuenta</span></p>
+
+                <button type="submit" className="btn-primary btn-full">Acceder</button>
+                <p className="auth-link">
+                  ¿Cliente nuevo?{' '}
+                  <span onClick={() => setVista('register')}>Crear cuenta</span>
+                </p>
               </form>
             </>
           ) : (
             <>
-              <h2 className="auth-title">Registro de Cliente</h2>
-              <form onSubmit={handleRegister}>
-                {[['nombre','Nombre'],['apellidos','Apellidos'],['dni','DNI'],['email','Email'],['telefono','Teléfono'],['direccion','Dirección']].map(([k,l]) => (
-                  <div className="field" key={k}>
-                    <label>{l}</label>
-                    <input placeholder={l} value={regForm[k]} onChange={e => setRegForm(r => ({...r,[k]:e.target.value}))} required={['nombre','dni','email'].includes(k)} />
+              <h2 className="auth-titulo">Crear cuenta</h2>
+              <form onSubmit={handleRegistro} className="auth-form">
+
+                {[
+                  { clave: 'nombre',     etiqueta: 'Nombre',      tipo: 'text',     ph: 'Tu nombre' },
+                  { clave: 'apellidos',  etiqueta: 'Apellidos',   tipo: 'text',     ph: 'Tus apellidos' },
+                  { clave: 'dni',        etiqueta: 'DNI / NIE',   tipo: 'text',     ph: '12345678A' },
+                  { clave: 'email',      etiqueta: 'Email',        tipo: 'email',    ph: 'tu@email.com' },
+                  { clave: 'telefono',   etiqueta: 'Teléfono',    tipo: 'tel',      ph: '600 000 000' },
+                  { clave: 'direccion',  etiqueta: 'Dirección',   tipo: 'text',     ph: 'Calle, número, ciudad' },
+                  { clave: 'contrasena', etiqueta: 'Contraseña',  tipo: 'password', ph: 'Mínimo 6 caracteres' }
+                ].map(({ clave, etiqueta, tipo, ph }) => (
+                  <div className="field" key={clave}>
+                    <label>{etiqueta}</label>
+                    <input type={tipo} required placeholder={ph}
+                      value={formRegistro[clave]}
+                      onChange={e => setFormRegistro(r => ({ ...r, [clave]: e.target.value }))}
+                    />
                   </div>
                 ))}
-                <div className="field">
-                  <label>Contraseña</label>
-                  <input type="password" placeholder="Contraseña" value={regForm.contrasena} onChange={e => setRegForm(r=>({...r,contrasena:e.target.value}))} required />
-                </div>
-                <button className="btn-primary" type="submit">Registrarme</button>
-                <p className="auth-link"><span onClick={() => setView('login')}>← Volver al login</span></p>
+
+                <button type="submit" className="btn-primary btn-full">Registrarme</button>
+                <p className="auth-link">
+                  <span onClick={() => setVista('login')}>← Volver al inicio</span>
+                </p>
               </form>
             </>
           )}
@@ -415,91 +442,152 @@ function App() {
     )
   }
 
-  const tabs = [
-    { key: 'vehiculos', icon: '🚗', label: 'Vehículos', roles: ['ADMIN','EMPLEADO','CLIENTE'] },
-    { key: 'citas',     icon: '📅', label: 'Citas',     roles: ['ADMIN','EMPLEADO','CLIENTE'] },
-    { key: 'presupuestos', icon: '📋', label: 'Presupuestos', roles: ['ADMIN','EMPLEADO','CLIENTE'] },
-    { key: 'facturas',  icon: '🧾', label: 'Facturas',  roles: ['ADMIN','EMPLEADO'] },
-    { key: 'clientes',  icon: '👤', label: 'Clientes',  roles: ['ADMIN','EMPLEADO'] },
-    { key: 'piezas',    icon: '📦', label: 'Stock',     roles: ['ADMIN','EMPLEADO'] },
-    { key: 'empleados', icon: '👨‍🔧', label: 'Empleados', roles: ['ADMIN'] },
-  ].filter(t => t.roles.includes(session.role))
+  // =========================
+  // VISTA CLIENTE
+  // =========================
 
-  const tabLabel = tabs.find(t => t.key === tab)?.label || tab
+  if (sesion.rol === 'CLIENTE') {
+    return (
+      <div className="app-layout">
+        <Sidebar rol={sesion.rol} pestaña={pestaña} setPestaña={setPestaña} cerrarSesion={cerrarSesion} />
+        <main className="contenido-principal">
+          <ClienteView cliente={datos[0]} vehiculos={vehiculos} citas={citasCliente} />
+        </main>
+      </div>
+    )
+  }
+
+  // =========================
+  // VISTA PRINCIPAL — ADMIN / EMPLEADO
+  // =========================
 
   return (
     <div className="app-layout">
-      <aside className="sidebar">
-        <div className="sidebar-logo">W<span>&</span>O</div>
-        <nav className="sidebar-nav">
-          {tabs.map(t => (
-            <button key={t.key} className={`nav-item ${tab === t.key ? 'active' : ''}`}
-              onClick={() => session.role === 'CLIENTE' ? null : navigateTo(t.key)}>
-              <span className="nav-icon">{t.icon}</span>
-              <span>{t.label}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">{session.auth.email[0]?.toUpperCase()}</div>
-            <div>
-              <p className="user-email">{session.auth.email}</p>
-              <span className={`role-badge role-${session.role.toLowerCase()}`}>{session.role}</span>
-            </div>
-          </div>
-          <button className="btn-logout" onClick={() => window.location.reload()}>Cerrar sesión</button>
-        </div>
-      </aside>
+      <Sidebar rol={sesion.rol} pestaña={pestaña} setPestaña={navegarA} cerrarSesion={cerrarSesion} />
 
-      <main className="main-content">
-        {msg && <div className={`toast toast-${msg.type}`}>{msg.text}</div>}
+      <main className="contenido-principal">
 
-        {session.role === 'CLIENTE' ? renderClienteView() : (
-          <>
-            <div className="page-header">
-              <h1>{tabs.find(t=>t.key===tab)?.icon} {tabLabel}</h1>
-              <button className="btn-primary" onClick={() => { setShowForm(!showForm); setEditItem(null); setForm({}) }}>
-                {showForm ? '✕ Cancelar' : '+ Nuevo'}
-              </button>
-            </div>
-
-            {showForm && (
-              <div className="form-card">
-                <h3>{editItem ? `Editar ${tabLabel}` : `Nuevo ${tabLabel}`}</h3>
-                <form className="form-grid" onSubmit={onSave}>
-                  {renderForm()}
-                  <div className="form-actions">
-                    <button className="btn-primary" type="submit">
-                      {editItem ? 'Guardar cambios' : 'Crear'}
-                    </button>
-                    <button type="button" className="btn-secondary"
-                      onClick={() => { setShowForm(false); setEditItem(null); setForm({}) }}>
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            <div className="table-card">
-              {renderTable()}
-            </div>
-          </>
+        {mensaje && (
+          <div className={`toast toast-${mensaje.tipo}`}>{mensaje.texto}</div>
         )}
+
+        <Header
+          titulo={pestaña.charAt(0).toUpperCase() + pestaña.slice(1)}
+          onNuevo={() => { setItemEditar(null); setForm({}); setMostrarForm(true) }}
+        />
+
+        <Buscador onBuscar={handleBusqueda} />
+
+        {cargando && <div className="barra-carga" />}
+
+        {mostrarForm && (
+          <div className="form-card">
+            <form onSubmit={guardar}>
+              <div className="form-grid">
+
+                {/* FIX pérdida de foco: campos fijos por sección */}
+                {camposActuales.map(clave => (
+                  <div className="field" key={clave}>
+                    <label>{etiquetas[clave] || clave}</label>
+                    <input
+                      value={form[clave] || ''}
+                      type={clave === 'contrasena' ? 'password' : 'text'}
+                      placeholder={etiquetas[clave] || clave}
+                      onChange={e => setForm(f => ({ ...f, [clave]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+
+                {/* Select cliente para vehículos */}
+                {pestaña === 'vehiculos' && (
+                  <div className="field">
+                    <label>Cliente</label>
+                    <select value={form.clienteId || ''}
+                      onChange={e => setForm(f => ({ ...f, clienteId: e.target.value }))}>
+                      <option value="">Selecciona un cliente</option>
+                      {clientes.map(c => (
+                        <option key={c.id} value={c.id}>{c.nombre} {c.apellidos}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Selects vehículo y empleado para citas */}
+                {pestaña === 'citas' && (
+                  <>
+                    <div className="field">
+                      <label>Vehículo</label>
+                      <select value={form.vehiculoId || ''}
+                        onChange={e => setForm(f => ({ ...f, vehiculoId: e.target.value }))}>
+                        <option value="">Selecciona un vehículo</option>
+                        {vehiculos.map(v => (
+                          <option key={v.id} value={v.id}>{v.matricula} — {v.marca} {v.modelo}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>Empleado</label>
+                      <select value={form.empleadoId || ''}
+                        onChange={e => setForm(f => ({ ...f, empleadoId: e.target.value }))}>
+                        <option value="">Selecciona un empleado</option>
+                        {empleados.map(emp => (
+                          <option key={emp.id} value={emp.id}>{emp.nombre} — {emp.puesto}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {/* Select presupuesto para facturas */}
+                {pestaña === 'facturas' && (
+                  <div className="field">
+                    <label>Presupuesto</label>
+                    <select value={form.presupuestoId || ''}
+                      onChange={e => setForm(f => ({ ...f, presupuestoId: e.target.value }))}>
+                      <option value="">Selecciona un presupuesto</option>
+                      {presupuestos.map(p => (
+                        <option key={p.id} value={p.id}>#{p.id} — {p.descripcion}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+              </div>
+
+              <div className="acciones-form">
+                <button type="submit" className="btn-primary">
+                  {itemEditar ? 'Actualizar' : 'Guardar'}
+                </button>
+                <button type="button" className="btn-secundario" onClick={() => setMostrarForm(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="tabla-card">
+          {pestaña === 'vehiculos'    && <Vehiculos    data={filtrados} onEdit={editar} onDelete={eliminar} />}
+          {pestaña === 'clientes'     && <Clientes     data={filtrados} onEdit={editar} onDelete={eliminar} />}
+          {pestaña === 'empleados'    && <Empleados    data={filtrados} onEdit={editar} onDelete={eliminar} />}
+          {pestaña === 'citas'        && <Citas        data={filtrados} onEdit={editar} onDelete={eliminar} />}
+          {pestaña === 'presupuestos' && <Presupuestos data={filtrados} onEdit={editar} onDelete={eliminar} />}
+          {pestaña === 'facturas'     && <Facturas     data={filtrados} onEdit={editar} onDelete={eliminar} />}
+          {pestaña === 'piezas'       && <Piezas       data={filtrados} onEdit={editar} onDelete={eliminar} />}
+        </div>
+
       </main>
+
+      <Modal
+        show={mostrarModal}
+        title="Eliminar registro"
+        text="¿Seguro que deseas eliminar este registro? Esta acción no se puede deshacer."
+        onConfirm={confirmarEliminacion}
+        onClose={() => setMostrarModal(false)}
+      />
+
     </div>
   )
-}
-
-// Componente auxiliar para secciones del cliente
-function ClienteSection({ endpoint, cfg, render }) {
-  const [items, setItems] = useState([])
-  useEffect(() => {
-    axios.get(`/api/${endpoint}`, cfg).then(r => setItems(r.data)).catch(() => {})
-  }, [endpoint])
-  if (!items.length) return <p className="empty">Sin registros.</p>
-  return <div className="info-list">{items.map(render)}</div>
 }
 
 export default App

@@ -21,9 +21,35 @@ public class ServicioCliente {
     }
 
     public Cliente guardarCliente(Cliente cliente) {
-        // Encriptar la contraseña antes de guardar
-        cliente.setContrasena(passwordEncoder.encode(cliente.getContrasena()));
+        if (cliente.getContrasena() == null || cliente.getContrasena().isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+        // Solo encodea si no está ya encriptada (evita doble encodeo en actualizaciones)
+        if (!cliente.getContrasena().startsWith("$2a$")) {
+            cliente.setContrasena(passwordEncoder.encode(cliente.getContrasena()));
+        }
         return repositorio.save(cliente);
+    }
+
+    public Cliente actualizarCliente(Long id, Cliente clienteNuevo) {
+        Cliente clienteExistente = repositorio.findById(id).orElse(null);
+        if (clienteExistente == null) return null;
+
+        clienteExistente.setNombre(clienteNuevo.getNombre());
+        clienteExistente.setApellidos(clienteNuevo.getApellidos());
+        clienteExistente.setDni(clienteNuevo.getDni());
+        clienteExistente.setEmail(clienteNuevo.getEmail());
+        clienteExistente.setTelefono(clienteNuevo.getTelefono());
+        clienteExistente.setDireccion(clienteNuevo.getDireccion());
+
+        // Solo se actualiza la contraseña si viene una nueva, si no conserva la anterior
+        if (clienteNuevo.getContrasena() != null
+                && !clienteNuevo.getContrasena().isBlank()
+                && !clienteNuevo.getContrasena().startsWith("$2a$")) {
+            clienteExistente.setContrasena(passwordEncoder.encode(clienteNuevo.getContrasena()));
+        }
+
+        return repositorio.save(clienteExistente);
     }
 
     public Cliente obtenerCliente(Long id) {
