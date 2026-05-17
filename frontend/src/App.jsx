@@ -16,6 +16,7 @@ import Header from './components/Header'
 import Modal from './components/Modal'
 import Buscador from './components/Buscador'
 import ClienteView from './components/ClienteView'
+import CalendarioCitas from './components/CalendarioCitas'
 
 function App() {
 
@@ -81,6 +82,7 @@ function App() {
   const [citasCliente, setCitasCliente] = useState([])
   const [presupuestosCliente, setPresupuestosCliente] = useState([])
   const [facturasCliente, setFacturasCliente] = useState([])
+  const [calendarioCitas, setCalendarioCitas] = useState("tabla") // o "calendario"
   const rol = sesion?.rol?.toUpperCase()
 
   useEffect(() => {
@@ -748,14 +750,31 @@ function App() {
                     onDelete={onDelete}
                   />
                 )}
-                {tab === "citas" && (
+                {tab === "citas" &&(
+                  <div className="form-actions">
+                    <button 
+                    className={`login-btn ${calendarioCitas==="tabla" ? "active" : ""}`}
+                    onClick={() => setCalendarioCitas("tabla")}>
+                      Lista
+                    </button>
+                    <button 
+                    className={`login-btn ${calendarioCitas==="calendario" ? "active" : ""}`}
+                    onClick={() => setCalendarioCitas("calendario")}>
+                      Calendario
+                    </button>
+                  </div>
+                )}
+                {calendarioCitas === "tabla" ? (
                   <Citas
                     data={citasCliente}
                     search={search}   
                     onEdit={onEdit}
                     onDelete={onDelete}
                   />
-                )}
+                ) : (
+                  <CalendarioCitas citas={citasCliente} />
+                )} 
+
               </div>
 
               {/*FORMULARIO*/}
