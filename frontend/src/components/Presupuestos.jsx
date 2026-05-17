@@ -1,7 +1,10 @@
-import React from 'react';
- 
+function Presupuestos({ data, onEdit, onDelete, search }) {
 
-function Presupuestos({ data, onEdit, onDelete }) {
+  const filtrados = data.filter(p =>
+    p.estado?.toLowerCase().includes(search.toLowerCase()) ||
+    p.vehiculo?.matricula?.toLowerCase().includes(search.toLowerCase())
+  )
+
   return (
     <table>
       <thead>
@@ -13,23 +16,42 @@ function Presupuestos({ data, onEdit, onDelete }) {
           <th></th>
         </tr>
       </thead>
+
       <tbody>
-        {data.map(p => (
+        {filtrados.map(p => (
           <tr key={p.id}>
             <td>{p.fecha}</td>
-            <td><b>{p.total}€</b></td>
-            <td>{p.estado}</td>
-            <td>{p.vehiculo ? p.vehiculo.matricula : '—'}</td>
+
             <td>
-              <button onClick={() => onEdit(p)}>✏️ Editar</button>
-              <button onClick={() => onDelete(p.id)}>🗑️</button>
+              <b>{p.total}€</b>
+            </td>
+
+            <td>
+              <span className={`badge badge-${p.estado?.toLowerCase()}`}>
+                {p.estado}
+              </span>
+            </td>
+
+            <td>
+              {p.vehiculo
+                ? p.vehiculo.matricula
+                : '—'}
+            </td>
+
+            <td className="acciones">
+              <button className="btn-edit" onClick={() => onEdit(p)}>
+                ✏️ Editar
+              </button>
+
+              <button className="btn-del" onClick={() => onDelete(p.id)}>
+                🗑️
+              </button>
             </td>
           </tr>
         ))}
       </tbody>
     </table>
-  );
+  )
 }
- 
 
-export default Presupuestos;
+export default Presupuestos

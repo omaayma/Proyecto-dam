@@ -27,21 +27,23 @@ public class ServicioDetallesUsuario implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        // Intentar buscar en Administradores usando el nuevo método del repo
+        // Evita procesar emails vacíos (peticiones sin credenciales)
+        if (email == null || email.isBlank()) {
+            throw new UsernameNotFoundException("Email vacío");
+        }
+
         Optional<Administrador> admin = repoAdmin.findByEmail(email);
         if (admin.isPresent()) {
             return new User(admin.get().getEmail(), admin.get().getContrasena(),
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
         }
 
-        // Intentar buscar en Empleados
         Optional<Empleado> empleado = repoEmpleado.findByEmail(email);
         if (empleado.isPresent()) {
             return new User(empleado.get().getEmail(), empleado.get().getContrasena(),
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_EMPLEADO")));
         }
 
-        //Intentar buscar en Clientes
         Optional<Cliente> cliente = repoCliente.findByEmail(email);
         if (cliente.isPresent()) {
             return new User(cliente.get().getEmail(), cliente.get().getContrasena(),

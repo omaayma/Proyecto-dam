@@ -1,7 +1,9 @@
-import React from 'react';
- 
+function Piezas({ data, onEdit, onDelete, search }) {
 
-function Piezas({ data, onEdit, onDelete }) {
+  const filtrados = data.filter(p =>
+    p.nombre?.toLowerCase().includes(search.toLowerCase())
+  )
+
   return (
     <table>
       <thead>
@@ -13,23 +15,36 @@ function Piezas({ data, onEdit, onDelete }) {
           <th></th>
         </tr>
       </thead>
+
       <tbody>
-        {data.map(p => (
+        {filtrados.map(p => (
           <tr key={p.id}>
             <td>{p.nombre}</td>
-            <td>{p.descripcion || '—'}</td>
-            <td>{p.stock} uds</td>
-            <td>{p.precio}€</td>
+
             <td>
-              <button onClick={() => onEdit(p)}>✏️ Editar</button>
-              <button onClick={() => onDelete(p.id)}>🗑️</button>
+              {p.descripcion || '—'}
+            </td>
+
+            <td className={p.stock <= 5 ? 'stock-low' : 'stock-ok'}>
+              {p.stock} uds
+            </td>
+
+            <td>{p.precio}€</td>
+
+            <td className="acciones">
+              <button className="btn-edit" onClick={() => onEdit(p)}>
+                ✏️ Editar
+              </button>
+
+              <button className="btn-del" onClick={() => onDelete(p.id)}>
+                🗑️
+              </button>
             </td>
           </tr>
         ))}
       </tbody>
     </table>
-  );
+  )
 }
- 
 
-export default Piezas;
+export default Piezas

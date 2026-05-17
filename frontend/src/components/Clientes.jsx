@@ -1,7 +1,12 @@
-import React from 'react';
- 
+function Clientes({ data, onEdit, onDelete, search }) {
 
-function Clientes({ data, onEdit, onDelete }) {
+  const filtrados = data.filter(c =>
+    c.nombre?.toLowerCase().includes(search.toLowerCase()) ||
+    c.apellidos?.toLowerCase().includes(search.toLowerCase()) ||
+    c.dni?.toLowerCase().includes(search.toLowerCase()) ||
+    c.email?.toLowerCase().includes(search.toLowerCase())
+  )
+
   return (
     <table>
       <thead>
@@ -14,24 +19,30 @@ function Clientes({ data, onEdit, onDelete }) {
           <th></th>
         </tr>
       </thead>
+
       <tbody>
-        {data.map(c => (
+        {filtrados.map(c => (
           <tr key={c.id}>
             <td>{c.nombre}</td>
             <td>{c.apellidos}</td>
             <td>{c.dni}</td>
             <td>{c.email}</td>
             <td>{c.telefono || '—'}</td>
-            <td>
-              <button onClick={() => onEdit(c)}>✏️ Editar</button>
-              <button onClick={() => onDelete(c.id)}>🗑️</button>
+
+            <td className="acciones">
+              <button className="btn-edit" onClick={() => onEdit(c)}>
+                ✏️ Editar
+              </button>
+
+              <button className="btn-del" onClick={() => onDelete(c.id)}>
+                🗑️
+              </button>
             </td>
           </tr>
         ))}
       </tbody>
     </table>
-  );
+  )
 }
- 
 
-export default Clientes;
+export default Clientes
