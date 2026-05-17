@@ -443,19 +443,31 @@ function App() {
   }
 
   // =========================
-  // VISTA CLIENTE
-  // =========================
+    // VISTA CLIENTE
+    // =========================
 
-  if (sesion.rol === 'CLIENTE') {
-    return (
-      <div className="app-layout">
-        <Sidebar rol={sesion.rol} pestaña={pestaña} setPestaña={setPestaña} cerrarSesion={cerrarSesion} />
-        <main className="contenido-principal">
-          <ClienteView cliente={datos[0]} vehiculos={vehiculos} citas={citasCliente} />
-        </main>
-      </div>
-    )
-  }
+    if (sesion.rol === 'CLIENTE') {
+      return (
+        <div className="app-layout">
+          {/* CORREGIDO: Mapeadas las propiedades al inglés para que coincidan con Sidebar.jsx */}
+          <Sidebar
+            session={{ role: sesion.rol }}
+            tab={pestaña}
+            setTab={setPestaña}
+            logout={cerrarSesion}
+          />
+          <main className="contenido-principal">
+            {/* CONTROL: Si datos[0] aún no ha cargado, ponemos un indicador de carga */}
+            {datos[0] ? (
+              <ClienteView cliente={datos[0]} vehiculos={vehiculos} citas={citasCliente} />
+            ) : (
+              <div className="barra-carga">Cargando tus datos de perfil...</div>
+            )}
+          </main>
+        </div>
+      )
+    }
+
 
   // =========================
   // VISTA PRINCIPAL — ADMIN / EMPLEADO

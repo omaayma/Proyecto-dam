@@ -82,8 +82,7 @@ public class Seguridad {
                         .requestMatchers("/api/administradores/**").hasRole("ADMIN")
                         .requestMatchers("/api/empleados/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO")
-                        .requestMatchers("/api/piezas/**").hasAnyRole("ADMIN", "EMPLEADO")
+                        .requestMatchers("/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")                        .requestMatchers("/api/piezas/**").hasAnyRole("ADMIN", "EMPLEADO")
                         .requestMatchers("/api/facturas/**").hasAnyRole("ADMIN", "EMPLEADO")
                         .requestMatchers("/api/presupuestos/**").hasAnyRole("ADMIN", "EMPLEADO")
 
