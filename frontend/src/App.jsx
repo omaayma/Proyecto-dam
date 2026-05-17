@@ -19,6 +19,9 @@ import ClienteView from './components/ClienteView'
 
 function App() {
 
+  // =========================================
+  // SESIÓN PERSISTENTE
+  // =========================================
   const [view, setView] = useState('login')
 
   const [sesion, setSesion] = useState(() => {
@@ -40,47 +43,395 @@ function App() {
     sessionStorage.setItem('sesion', JSON.stringify(sesion))
   }, [sesion])
 
-  const [search, setSearch] = useState('')
+  // =========================================
+  // ESTADOS PRINCIPALES
+  // =========================================
   const [tab, setTab] = useState('vehiculos')
   const [data, setData] = useState([])
+  const [search, setSearch] = useState('')
 
-  const [vehiculosCliente, setVehiculosCliente] = useState([])
-  const [citasCliente, setCitasCliente] = useState([])
+  const [mostrarForm, setMostrarForm] = useState(false)
+
+  const [editando, setEditando] = useState(null)
+
+  const [toast, setToast] = useState(null)
 
   const [modalEliminar, setModalEliminar] = useState({
     open: false,
     id: null
   })
 
+  // =========================================
+  // DATOS AUXILIARES
+  // =========================================
+  const [vehiculos, setVehiculos] = useState([])
+  const [empleados, setEmpleados] = useState([])
+  const [clientes, setClientes] = useState([])
+  const [presupuestos, setPresupuestos] = useState([])
+
+  // =========================================
+  // FORMULARIO CONTROLADO
+  // =========================================
+  const [form, setForm] = useState({})
+
+  // =========================================
+  // CLIENTE DASHBOARD
+  // =========================================
+  const [vehiculosCliente, setVehiculosCliente] = useState([])
+  const [citasCliente, setCitasCliente] = useState([])
+
   const rol = sesion?.rol?.toUpperCase()
 
+  // =========================================
+  // TOAST
+  // =========================================
+  const notify = (text, type = 'ok') => {
+
+    setToast({
+      text,
+      type
+    })
+
+    setTimeout(() => {
+      setToast(null)
+    }, 3000)
+  }
+
+  // =========================================
+  // AUTH CONFIG
+  // =========================================
+  const authConfig = () => ({
+    headers: {
+      Authorization:
+        `Basic ${btoa(sesion.auth.email + ':' + sesion.auth.pass)}`
+    }
+  })
+
+  // =========================================
+  // CARGAR DATOS
+  // =========================================
   useEffect(() => {
 
     if (!sesion.logueado) return
 
     if (rol === 'CLIENTE') {
 
-      axios.get('/api/vehiculos')
+      axios.get('/api/vehiculos', authConfig())
         .then(res => {
-          const filtrados = res.data.filter(v => v?.cliente?.id === sesion.clienteId)
+          const filtrados =
+            res.data.filter(v =>
+              v?.cliente?.id === sesion.clienteId
+            )
+
           setVehiculosCliente(filtrados)
         })
 
-      axios.get('/api/citas')
+      axios.get('/api/citas', authConfig())
         .then(res => {
-          const filtradas = res.data.filter(c => c?.vehiculo?.cliente?.id === sesion.clienteId)
+
+          const filtradas =
+            res.data.filter(c =>
+              c?.vehiculo?.cliente?.id === sesion.clienteId
+            )
+
           setCitasCliente(filtradas)
         })
 
-    } else {
-
-      axios.get(`/api/${tab}`)
-        .then(res => setData(res.data))
-        .catch(() => setData([]))
+      return
     }
 
-  }, [sesion, tab])
+    axios.get(`/api/${tab}`, authConfig())
+      .then(res => setData(res.data))
+      .catch(() => setData([]))
 
+    // AUX
+    axios.get('/api/vehiculos', authConfig())
+      .then(res => setVehiculos(res.data))
+
+    axios.get('/api/empleados', authConfig())
+      .then(res => setEmpleados(res.data))
+
+    axios.get('/api/clientes', authConfig())
+      .then(res => setClientes(res.data))
+
+    axios.get('/api/presupuestos', authConfig())
+      .then(res => setPresupuestos(res.data))
+
+  }, [tab, sesion])
+
+  // =========================================
+  // VALIDACIONES
+  // =========================================
+  const validarEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  const validarDni = (dni) => {
+    return /^[0-9]{8}[A-Za-z]$/.test(dni)
+  }
+
+  const validarMatricula = (m) => {
+    return /^[0-9]{4}[A-Z]{3}$/.test(m)
+  }
+
+  // =========================================
+  // LOGIN
+  // =========================================
+  const handleLogin = (e) => {
+
+    e.preventDefault()
+
+    const email = e.target.email.value
+    const pass = e.target.password.value
+
+    const cfg = {
+      headers: {
+        Authorization:
+          `Basic ${btoa(email + ':' + pass)}`
+      }
+    }
+
+    axios.get('/api/empleados', cfg)
+
+      .then(res => {
+
+        const emp =
+          res.data.find(u => u.email === email)
+
+        if (!emp) return
+
+        setSesion({
+          logueado: true,
+          rol: emp.rol,
+          nombre: emp.nombre,
+          auth: { email, pass }
+        })
+
+        notify('Bienvenido')
+      })
+
+      .catch(() => {
+
+        axios.get('/api/clientes', cfg)
+
+          .then(res => {
+
+            const cli =
+              res.data.find(c => c.email === email)
+
+            if (!cli) {
+              notify('Credenciales incorrectas', 'err')
+              return
+            }
+
+            setSesion({
+              logueado: true,
+              rol: 'CLIENTE',
+              nombre: cli.nombre,
+              clienteId: cli.id,
+              auth: { email, pass }
+            })
+
+            notify('Bienvenido')
+          })
+
+          .catch(() => {
+            notify('Credenciales incorrectas', 'err')
+          })
+      })
+  }
+
+  // =========================================
+  // REGISTRO
+  // =========================================
+  const handleRegister = (e) => {
+
+    e.preventDefault()
+
+    const body = {
+      nombre: e.target.nombre.value,
+      apellidos: e.target.apellidos.value,
+      dni: e.target.dni.value,
+      email: e.target.email.value,
+      telefono: e.target.telefono.value,
+      direccion: e.target.direccion.value,
+      contrasena: e.target.password.value
+    }
+
+    if (!validarEmail(body.email)) {
+      notify('Email inválido', 'err')
+      return
+    }
+
+    if (!validarDni(body.dni)) {
+      notify('DNI inválido', 'err')
+      return
+    }
+
+    axios.post('/api/clientes', body)
+
+      .then(() => {
+
+        notify('Cuenta creada')
+
+        setView('login')
+      })
+
+      .catch(() => {
+        notify('Error al registrar', 'err')
+      })
+  }
+
+  // =========================================
+  // EDITAR
+  // =========================================
+  const onEdit = (item) => {
+
+    setEditando(item)
+
+    // PRECARGA SELECTS CITA
+    if (tab === 'citas') {
+
+      setForm({
+        ...item,
+        vehiculoId: item?.vehiculo?.id || '',
+        empleadoId: item?.empleado?.id || ''
+      })
+
+    } else {
+
+      setForm(item)
+    }
+
+    setMostrarForm(true)
+  }
+
+  // =========================================
+  // DELETE
+  // =========================================
+  const onDelete = (id) => {
+
+    setModalEliminar({
+      open: true,
+      id
+    })
+  }
+
+  const confirmarEliminar = () => {
+
+    axios.delete(
+      `/api/${tab}/${modalEliminar.id}`,
+      authConfig()
+    )
+
+      .then(() => {
+
+        setData(prev =>
+          prev.filter(i => i.id !== modalEliminar.id)
+        )
+
+        notify('Registro eliminado')
+
+        setModalEliminar({
+          open: false,
+          id: null
+        })
+      })
+
+      .catch(() => {
+        notify('Error al eliminar', 'err')
+      })
+  }
+
+  // =========================================
+  // SAVE
+  // =========================================
+  const onSave = (e) => {
+
+    e.preventDefault()
+
+    if (form.email && !validarEmail(form.email)) {
+      notify('Email inválido', 'err')
+      return
+    }
+
+    if (form.dni && !validarDni(form.dni)) {
+      notify('DNI inválido', 'err')
+      return
+    }
+
+    if (form.matricula && !validarMatricula(form.matricula)) {
+      notify('Matrícula inválida', 'err')
+      return
+    }
+
+    const body = { ...form }
+
+    if (body.vehiculoId) {
+      body.vehiculo = {
+        id: parseInt(body.vehiculoId)
+      }
+      delete body.vehiculoId
+    }
+
+    if (body.empleadoId) {
+      body.empleado = {
+        id: parseInt(body.empleadoId)
+      }
+      delete body.empleadoId
+    }
+
+    if (body.clienteId) {
+      body.cliente = {
+        id: parseInt(body.clienteId)
+      }
+      delete body.clienteId
+    }
+
+    if (body.presupuestoId) {
+      body.presupuesto = {
+        id: parseInt(body.presupuestoId)
+      }
+      delete body.presupuestoId
+    }
+
+    const req = editando
+
+      ? axios.put(
+          `/api/${tab}/${editando.id}`,
+          body,
+          authConfig()
+        )
+
+      : axios.post(
+          `/api/${tab}`,
+          body,
+          authConfig()
+        )
+
+    req.then(() => {
+
+      notify(
+        editando
+          ? 'Actualizado correctamente'
+          : 'Creado correctamente'
+      )
+
+      setMostrarForm(false)
+      setEditando(null)
+      setForm({})
+
+      axios.get(`/api/${tab}`, authConfig())
+        .then(res => setData(res.data))
+
+    }).catch(() => {
+      notify('Error al guardar', 'err')
+    })
+  }
+
+  // =========================================
+  // LOGOUT
+  // =========================================
   const logout = () => {
 
     sessionStorage.removeItem('sesion')
@@ -97,91 +448,9 @@ function App() {
     })
   }
 
-  const handleLogin = (e) => {
-
-    e.preventDefault()
-
-    const email = e.target.email.value
-    const pass = e.target.password.value
-
-    const auth = {
-      headers: {
-        Authorization: `Basic ${btoa(email + ':' + pass)}`
-      }
-    }
-
-    axios.get('/api/empleados', auth)
-
-      .then(res => {
-
-        const usuario = res.data.find(u => u.email === email)
-
-        if (!usuario) return
-
-        setSesion({
-          logueado: true,
-          rol: usuario.rol,
-          nombre: usuario.nombre,
-          auth: { email, pass }
-        })
-      })
-
-      .catch(() => {
-
-        axios.get('/api/clientes', auth)
-
-          .then(res => {
-
-            const cliente = res.data.find(c => c.email === email)
-
-            if (!cliente) {
-              alert('Credenciales incorrectas')
-              return
-            }
-
-            setSesion({
-              logueado: true,
-              rol: 'CLIENTE',
-              nombre: cliente.nombre,
-              clienteId: cliente.id,
-              auth: { email, pass }
-            })
-          })
-
-          .catch(() => {
-            alert('Credenciales incorrectas')
-          })
-      })
-  }
-
-  const handleRegister = (e) => {
-
-    e.preventDefault()
-
-    const body = {
-      nombre: e.target.nombre.value,
-      apellidos: e.target.apellidos.value,
-      dni: e.target.dni.value,
-      email: e.target.email.value,
-      telefono: e.target.telefono.value,
-      direccion: e.target.direccion.value,
-      contrasena: e.target.password.value
-    }
-
-    axios.post('/api/clientes', body)
-
-      .then(() => {
-
-        alert('Cuenta creada correctamente')
-
-        setView('login')
-      })
-
-      .catch(() => {
-        alert('Error al registrar')
-      })
-  }
-
+  // =========================================
+  // LOGIN UI
+  // =========================================
   if (!sesion.logueado) {
 
     return (
@@ -213,7 +482,6 @@ function App() {
                   <input
                     type="email"
                     name="email"
-                    placeholder="tu@email.com"
                     required
                   />
                 </div>
@@ -224,12 +492,11 @@ function App() {
                   <input
                     type="password"
                     name="password"
-                    placeholder="••••••••"
                     required
                   />
                 </div>
 
-                <button className="login-btn" type="submit">
+                <button className="login-btn">
                   Acceder
                 </button>
 
@@ -288,15 +555,15 @@ function App() {
                   <input type="password" name="password" required />
                 </div>
 
-                <button className="login-btn" type="submit">
-                  Crear cuenta
+                <button className="login-btn">
+                  Registrarme
                 </button>
 
                 <p className="auth-switch">
                   ¿Ya tienes cuenta?
 
                   <span onClick={() => setView('login')}>
-                    Volver al login
+                    Volver
                   </span>
                 </p>
 
@@ -304,10 +571,19 @@ function App() {
             </>
           )}
         </div>
+
+        {toast &&
+          <div className={`toast toast-${toast.type}`}>
+            {toast.text}
+          </div>
+        }
       </div>
     )
   }
 
+  // =========================================
+  // MAIN APP
+  // =========================================
   return (
 
     <div className="app-layout">
@@ -320,6 +596,12 @@ function App() {
       />
 
       <main className="contenido-principal">
+
+        {toast &&
+          <div className={`toast toast-${toast.type}`}>
+            {toast.text}
+          </div>
+        }
 
         {rol === 'CLIENTE' ? (
 
@@ -334,6 +616,11 @@ function App() {
           <>
             <Header
               title={`Gestión de ${tab}`}
+              onNew={() => {
+                setMostrarForm(true)
+                setEditando(null)
+                setForm({})
+              }}
             />
 
             <Buscador
@@ -347,6 +634,8 @@ function App() {
                 <Vehiculos
                   data={data}
                   search={search}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               }
 
@@ -354,6 +643,8 @@ function App() {
                 <Clientes
                   data={data}
                   search={search}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               }
 
@@ -361,6 +652,8 @@ function App() {
                 <Empleados
                   data={data}
                   search={search}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               }
 
@@ -368,6 +661,8 @@ function App() {
                 <Citas
                   data={data}
                   search={search}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               }
 
@@ -375,6 +670,8 @@ function App() {
                 <Presupuestos
                   data={data}
                   search={search}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               }
 
@@ -382,6 +679,8 @@ function App() {
                 <Facturas
                   data={data}
                   search={search}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               }
 
@@ -389,10 +688,118 @@ function App() {
                 <Piezas
                   data={data}
                   search={search}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               }
 
             </div>
+
+            {mostrarForm && (
+
+              <div className="form-card">
+
+                <form onSubmit={onSave}>
+
+                  <div className="form-grid">
+
+                    {Object.keys(form).map(key => {
+
+                      if (key === 'id') return null
+
+                      return (
+                        <div className="field" key={key}>
+
+                          <label>{key}</label>
+
+                          <input
+                            value={form[key] || ''}
+                            onChange={(e) =>
+                              setForm(prev => ({
+                                ...prev,
+                                [key]: e.target.value
+                              }))
+                            }
+                          />
+
+                        </div>
+                      )
+                    })}
+
+                    {tab === 'citas' && (
+
+                      <>
+                        <div className="field">
+                          <label>Vehículo</label>
+
+                          <select
+                            value={form.vehiculoId || ''}
+                            onChange={(e) =>
+                              setForm(prev => ({
+                                ...prev,
+                                vehiculoId: e.target.value
+                              }))
+                            }
+                          >
+                            <option value="">
+                              Selecciona vehículo
+                            </option>
+
+                            {vehiculos.map(v => (
+                              <option key={v.id} value={v.id}>
+                                {v.matricula}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="field">
+                          <label>Empleado</label>
+
+                          <select
+                            value={form.empleadoId || ''}
+                            onChange={(e) =>
+                              setForm(prev => ({
+                                ...prev,
+                                empleadoId: e.target.value
+                              }))
+                            }
+                          >
+                            <option value="">
+                              Selecciona empleado
+                            </option>
+
+                            {empleados.map(emp => (
+                              <option key={emp.id} value={emp.id}>
+                                {emp.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                  </div>
+
+                  <div className="form-actions">
+
+                    <button className="login-btn">
+                      Guardar
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-cancel"
+                      onClick={() => setMostrarForm(false)}
+                    >
+                      Cancelar
+                    </button>
+
+                  </div>
+
+                </form>
+              </div>
+            )}
           </>
         )}
       </main>
@@ -400,7 +807,14 @@ function App() {
       <Modal
         open={modalEliminar.open}
         title="Eliminar"
-        text="¿Seguro que deseas eliminar?"
+        text="¿Seguro que deseas eliminar este registro?"
+        onConfirm={confirmarEliminar}
+        onCancel={() =>
+          setModalEliminar({
+            open: false,
+            id: null
+          })
+        }
       />
 
     </div>
