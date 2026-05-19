@@ -1,9 +1,7 @@
 package com.taller.Taller.servicio;
 
-import com.taller.Taller.modelo.Administrador;
 import com.taller.Taller.modelo.Cliente;
 import com.taller.Taller.modelo.Empleado;
-import com.taller.Taller.repositorio.RepositorioAdministrador;
 import com.taller.Taller.repositorio.RepositorioCliente;
 import com.taller.Taller.repositorio.RepositorioEmpleado;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,42 +12,39 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ServicioDetallesUsuario implements UserDetailsService {
 
-    @Autowired private RepositorioAdministrador repoAdmin;
     @Autowired private RepositorioEmpleado repoEmpleado;
-    @Autowired private RepositorioCliente repoCliente;
+    @Autowired private RepositorioCliente  repoCliente;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        // Evita procesar emails vacíos (peticiones sin credenciales)
-        if (email == null || email.isBlank()) {
-            throw new UsernameNotFoundException("Email vacío");
-        }
-
-        Optional<Administrador> admin = repoAdmin.findByEmail(email);
-        if (admin.isPresent()) {
-            return new User(admin.get().getEmail(), admin.get().getContrasena(),
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
-        }
-
         Optional<Empleado> empleado = repoEmpleado.findByEmail(email);
         if (empleado.isPresent()) {
-            return new User(empleado.get().getEmail(), empleado.get().getContrasena(),
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_EMPLEADO")));
+            String rol = empleado.get().getRol() != null
+                    ? empleado.get().getRol().toUpperCase()
+                    : "EMPLEADO";
+            return new User(
+                    email,
+                    empleado.get().getContrasena(),
+                    List.of(new SimpleGrantedAuthority("ROLE_" + rol))
+            );
         }
 
         Optional<Cliente> cliente = repoCliente.findByEmail(email);
         if (cliente.isPresent()) {
-            return new User(cliente.get().getEmail(), cliente.get().getContrasena(),
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_CLIENTE")));
+            return new User(
+                    email,
+                    cliente.get().getContrasena(),
+                    List.of(new SimpleGrantedAuthority("ROLE_CLIENTE"))
+            );
         }
 
-        throw new UsernameNotFoundException("Usuario no encontrado con email: " + email);
+        throw new UsernameNotFoundException("Usuario no encontrado: " + email);
     }
 }

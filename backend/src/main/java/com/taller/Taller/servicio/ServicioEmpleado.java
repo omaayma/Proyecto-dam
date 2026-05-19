@@ -10,27 +10,20 @@ import com.taller.Taller.repositorio.RepositorioEmpleado;
 @Service
 public class ServicioEmpleado {
 
-    @Autowired
-    private RepositorioEmpleado repositorio;
+    @Autowired private RepositorioEmpleado repositorio;
+    @Autowired private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public List<Empleado> listar() {
-        return repositorio.findAll();
-    }
+    public List<Empleado> listar() { return repositorio.findAll(); }
 
     public Empleado guardar(Empleado empleado) {
-        // Encriptar la contraseña antes de guardar
-        empleado.setContrasena(passwordEncoder.encode(empleado.getContrasena()));
+        if (empleado.getContrasena() != null
+                && !empleado.getContrasena().isBlank()
+                && !empleado.getContrasena().startsWith("$2a$")) {
+            empleado.setContrasena(passwordEncoder.encode(empleado.getContrasena()));
+        }
         return repositorio.save(empleado);
     }
 
-    public Empleado obtener(Long id) {
-        return repositorio.findById(id).orElse(null);
-    }
-
-    public void eliminar(Long id) {
-        repositorio.deleteById(id);
-    }
+    public Empleado obtener(Long id) { return repositorio.findById(id).orElse(null); }
+    public void eliminar(Long id) { repositorio.deleteById(id); }
 }
