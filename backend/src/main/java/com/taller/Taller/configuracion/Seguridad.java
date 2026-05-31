@@ -1,4 +1,3 @@
-
 package com.taller.Taller.configuracion;
 
 import com.taller.Taller.servicio.ServicioDetallesUsuario;
@@ -58,21 +57,38 @@ public class Seguridad {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
+
+                        // OPTIONS siempre permitido (preflight CORS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Registro público — DEBE IR PRIMERO
                         .requestMatchers(HttpMethod.POST, "/api/clientes").permitAll()
-                        .requestMatchers("/api/auth/me").authenticated()
+
+                        // Auth
+                        .requestMatchers("/api/auth/**").authenticated()
+
+                        // Solo ADMIN
                         .requestMatchers("/api/empleados/**").hasRole("ADMIN")
                         .requestMatchers("/api/administradores/**").hasRole("ADMIN")
-                        .requestMatchers("/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
+
+                        // ADMIN y EMPLEADO
+                        .requestMatchers(HttpMethod.GET,    "/api/clientes").hasAnyRole("ADMIN", "EMPLEADO")
+                        .requestMatchers(HttpMethod.GET,    "/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
+                        .requestMatchers(HttpMethod.PUT,    "/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
+                        .requestMatchers(HttpMethod.DELETE, "/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO")
                         .requestMatchers("/api/piezas/**").hasAnyRole("ADMIN", "EMPLEADO")
                         .requestMatchers("/api/facturas/**").hasAnyRole("ADMIN", "EMPLEADO")
                         .requestMatchers("/api/presupuestos/**").hasAnyRole("ADMIN", "EMPLEADO")
+
+                        // ADMIN, EMPLEADO y CLIENTE
                         .requestMatchers("/api/vehiculos/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
                         .requestMatchers("/api/citas/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
+
                         .anyRequest().authenticated()
                 )
                 .httpBasic(basic -> basic.authenticationEntryPoint(puntoDeEntrada()))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(puntoDeEntrada()));
+
         return http.build();
     }
 }

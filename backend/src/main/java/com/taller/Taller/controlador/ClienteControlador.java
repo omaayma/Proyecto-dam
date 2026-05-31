@@ -11,7 +11,6 @@ import com.taller.Taller.servicio.ServicioCliente;
 
 @RestController
 @RequestMapping("api/clientes")
-@CrossOrigin(origins = "*")
 public class ClienteControlador {
 
 @Autowired
