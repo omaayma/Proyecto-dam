@@ -17,10 +17,12 @@ import ClienteView     from './components/ClienteView'
 import CalendarioCitas from './components/CalendarioCitas'
 import Dashboard       from './components/Dashboard'
 import Configuracion   from './components/Configuracion'
+import Landing         from './components/Landing'
+import Mensajes        from './components/Mensajes'
 
 function App() {
 
-  const [view, setView] = useState('login')
+  const [view, setView] = useState('landing')
 
   const [sesion, setSesion] = useState(() => {
     const saved = sessionStorage.getItem('sesion')
@@ -43,7 +45,8 @@ function App() {
   const [modalEliminar,   setModalEliminar]   = useState({ open: false, id: null })
   const [vistaCalendario, setVistaCalendario] = useState(false)
   const [mostrarConfig,   setMostrarConfig]   = useState(false)
-  const [tema,            setTema]            = useState(localStorage.getItem('tema') || 'dark')
+  const [tema,            setTema]            = useState(localStorage.getItem('tema')   || 'dark')
+  const [idioma,          setIdioma]          = useState(localStorage.getItem('idioma') || 'es')
   const [statsAdmin,      setStatsAdmin]      = useState(null)
 
   const [vehiculos,    setVehiculos]    = useState([])
@@ -64,6 +67,10 @@ function App() {
     document.documentElement.setAttribute('data-theme', tema)
     localStorage.setItem('tema', tema)
   }, [tema])
+
+  useEffect(() => {
+    localStorage.setItem('idioma', idioma)
+  }, [idioma])
 
   useEffect(() => {
     if (sesion.logueado) setTab('dashboard')
@@ -102,6 +109,7 @@ function App() {
       axios.get('/api/piezas',       cfg),
     ]).then(([c, v, e, ci, p, f, pz]) => {
       const hoy = new Date().toISOString().split('T')[0]
+      const piezasBajas = pz.data.filter(x => x.stock < 5)
       setStatsAdmin({
         clientes:               c.data.length,
         vehiculos:              v.data.length,
@@ -110,9 +118,18 @@ function App() {
         citasPendientes:        ci.data.filter(x => x.estado === 'PENDIENTE').length,
         presupuestosPendientes: p.data.filter(x => x.estado === 'PENDIENTE').length,
         ingresosMes:            f.data.reduce((sum, x) => sum + (x.total || 0), 0),
-        stockBajo:              pz.data.filter(x => x.stock < 5).length,
+        stockBajo:              piezasBajas.length,
         todasCitas:             ci.data,
+        piezasBajas,
       })
+      if (piezasBajas.length > 0) {
+        const msgs = JSON.parse(localStorage.getItem('mensajes_admin') || '[]')
+        const yaExiste = msgs.find(m => m.tipo === 'stock' && m.fecha === hoy)
+        if (!yaExiste) {
+          msgs.unshift({ id: Date.now(), tipo: 'stock', fecha: hoy, leido: false, asunto: 'Alerta de stock bajo', texto: `Las siguientes piezas tienen stock bajo: ${piezasBajas.map(p => p.nombre + ' (' + p.stock + ' uds)').join(', ')}` })
+          localStorage.setItem('mensajes_admin', JSON.stringify(msgs))
+        }
+      }
     }).catch(() => {})
   }
 
@@ -120,7 +137,7 @@ function App() {
     if (!sesion.logueado) return
     if (rol === 'CLIENTE') { cargarDatosCliente(); return }
     if (tab === 'dashboard') { cargarStats(); return }
-    if (!tab || tab === 'configuracion') return
+    if (!tab || tab === 'configuracion' || tab === 'mensajes') return
 
     axios.get(`/api/${tab}`, authConfig()).then(r => setData(r.data)).catch(() => setData([]))
     axios.get('/api/vehiculos',    authConfig()).then(r => setVehiculos(r.data)).catch(() => {})
@@ -136,13 +153,7 @@ function App() {
     const cfg   = { headers: { Authorization: `Basic ${btoa(email + ':' + pass)}` } }
     axios.get('/api/auth/me', cfg)
       .then(res => {
-        setSesion({
-          logueado:  true,
-          rol:       res.data.rol,
-          nombre:    res.data.nombre,
-          clienteId: res.data.clienteId || null,
-          auth:      { email, pass }
-        })
+        setSesion({ logueado: true, rol: res.data.rol, nombre: res.data.nombre, clienteId: res.data.clienteId || null, auth: { email, pass } })
         notify('Bienvenido, ' + res.data.nombre)
       })
       .catch(() => notify('Credenciales incorrectas', 'err'))
@@ -164,7 +175,13 @@ function App() {
     if (body.contrasena.length < 4) { notify('Contraseña mínimo 4 caracteres', 'err'); return }
     axios.post('/api/clientes', body)
       .then(() => { notify('Cuenta creada. Ya puedes iniciar sesión.'); setView('login') })
-      .catch(err => notify(err.response?.status === 409 ? 'Ya existe una cuenta con ese DNI o email' : 'Error al registrar', 'err'))
+      .catch(err => {
+        if (err.response?.status === 409 || err.response?.status === 500) {
+          notify('Ya existe una cuenta con ese DNI o email', 'err')
+        } else {
+          notify('Error al registrar. Comprueba los datos.', 'err')
+        }
+      })
   }
 
   const emptyFormByTab = (t, rolUpper) => {
@@ -187,11 +204,17 @@ function App() {
 
   const onEdit = (item) => {
     setEditando(item)
-    if (tab === 'citas')             setForm({ ...item, vehiculoId: item?.vehiculo?.id || '', empleadoId: item?.empleado?.id || '' })
-    else if (tab === 'presupuestos') setForm({ ...item, vehiculoId: item?.vehiculo?.id || '' })
-    else if (tab === 'facturas')     setForm({ ...item, presupuestoId: item?.presupuesto?.id || '' })
-    else if (tab === 'vehiculos')    setForm({ ...item, clienteId: item?.cliente?.id || '' })
-    else                             setForm({ ...item })
+    if (tab === 'citas') {
+      setForm({ ...item, vehiculoId: item?.vehiculo?.id || '', empleadoId: item?.empleado?.id || '', vehiculo: undefined, empleado: undefined })
+    } else if (tab === 'presupuestos') {
+      setForm({ ...item, vehiculoId: item?.vehiculo?.id || '', vehiculo: undefined })
+    } else if (tab === 'facturas') {
+      setForm({ ...item, presupuestoId: item?.presupuesto?.id || '', presupuesto: undefined })
+    } else if (tab === 'vehiculos') {
+      setForm({ ...item, clienteId: item?.cliente?.id || '', cliente: undefined })
+    } else {
+      setForm({ ...item })
+    }
     setMostrarForm(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -238,7 +261,13 @@ function App() {
       setMostrarForm(false); setEditando(null); setForm({})
       if (rol === 'CLIENTE') { cargarDatosCliente(); return }
       axios.get(`/api/${tab}`, authConfig()).then(r => setData(r.data))
-    }).catch(err => notify('Error al guardar: ' + (err.response?.data?.message || err.message), 'err'))
+    }).catch(err => {
+      if (err.response?.status === 409 || err.response?.status === 500) {
+        notify('Ya existe un registro con ese DNI, email o matrícula', 'err')
+      } else {
+        notify('Error al guardar: ' + (err.response?.data?.message || err.message), 'err')
+      }
+    })
   }
 
   const exportarCSV = () => {
@@ -254,6 +283,11 @@ function App() {
   const logout = () => {
     sessionStorage.removeItem('sesion')
     setSesion({ logueado: false, rol: '', nombre: '', clienteId: null, auth: { email: '', pass: '' } })
+    setView('landing')
+  }
+
+  if (view === 'landing' && !sesion.logueado) {
+    return <Landing onLogin={() => setView('login')} onRegister={() => setView('register')} idioma={idioma} />
   }
 
   if (!sesion.logueado) {
@@ -261,8 +295,9 @@ function App() {
       <div className="auth-wrapper">
         {toast && <div className={`toast toast-${toast.type}`}>{toast.text}</div>}
         <div className="auth-card">
-          <div className="auth-logo">W<span>&O</span></div>
-          <p className="auth-sub">Taller Mecánico</p>
+          <div className="auth-logo-img">
+            <img src="/logo.png" alt="W&O" style={{ height: '60px', objectFit: 'contain' }} />
+          </div>
           {view === 'login' ? (
             <>
               <h2 className="auth-title">Iniciar sesión</h2>
@@ -271,6 +306,7 @@ function App() {
                 <div className="field"><label>Contraseña</label><input name="password" type="password" placeholder="••••••••" required /></div>
                 <button className="login-btn" type="submit">Acceder</button>
                 <p className="auth-switch">¿Cliente nuevo? <span onClick={() => setView('register')}>Crear cuenta</span></p>
+                <p className="auth-switch"><span onClick={() => setView('landing')} style={{ color: 'var(--muted)', fontSize: '12px' }}>← Volver al inicio</span></p>
               </form>
             </>
           ) : (
@@ -291,6 +327,8 @@ function App() {
     )
   }
 
+  const mensajesNoLeidos = JSON.parse(localStorage.getItem('mensajes_admin') || '[]').filter(m => !m.leido).length
+
   return (
     <div className="app-layout">
       {toast && <div className={`toast toast-${toast.type}`}>{toast.text}</div>}
@@ -310,6 +348,7 @@ function App() {
         logout={logout}
         onConfig={() => setMostrarConfig(true)}
         stockAlerta={statsAdmin?.stockBajo > 0}
+        mensajesNoLeidos={mensajesNoLeidos}
       />
 
       <main className="contenido-principal">
@@ -322,6 +361,8 @@ function App() {
             sesion={sesion}
             authConfig={authConfig}
             notify={notify}
+            idioma={idioma}
+            onIdioma={setIdioma}
           />
         )}
 
@@ -345,6 +386,7 @@ function App() {
             setEditando={setEditando}
             emptyFormByTab={emptyFormByTab}
             cargarDatosCliente={cargarDatosCliente}
+            idioma={idioma}
           />
         )}
 
@@ -352,7 +394,11 @@ function App() {
           <Dashboard stats={statsAdmin} rol={rol} onNavigate={(t) => { setTab(t); setMostrarForm(false) }} />
         )}
 
-        {rol !== 'CLIENTE' && tab !== 'dashboard' && tab !== 'configuracion' && (
+        {rol !== 'CLIENTE' && tab === 'mensajes' && (
+          <Mensajes />
+        )}
+
+        {rol !== 'CLIENTE' && tab !== 'dashboard' && tab !== 'configuracion' && tab !== 'mensajes' && (
           <>
             <Header
               title={`Gestión de ${tab}`}
@@ -396,7 +442,7 @@ function App() {
                   </h3>
                   <div className="form-grid">
                     {Object.keys(form).map(key => {
-                      if (key === 'id') return null
+                      if (['id','vehiculo','empleado','cliente','presupuesto','citas','presupuestos','facturas','piezas'].includes(key)) return null
                       if (key === 'vehiculoId') return (
                         <div className="field" key={key}>
                           <label>Vehículo</label>
@@ -437,8 +483,8 @@ function App() {
                         <div className="field" key={key}>
                           <label>Estado</label>
                           <select value={form.estado || ''} onChange={e => setForm(prev => ({ ...prev, estado: e.target.value }))}>
-                            {tab === 'citas'         && ['PENDIENTE','CONFIRMADA','CANCELADA','COMPLETADA'].map(s => <option key={s} value={s}>{s}</option>)}
-                            {tab === 'presupuestos'  && ['PENDIENTE','ACEPTADO','RECHAZADO'].map(s => <option key={s} value={s}>{s}</option>)}
+                            {tab === 'citas'        && ['PENDIENTE','CONFIRMADA','CANCELADA','COMPLETADA'].map(s => <option key={s} value={s}>{s}</option>)}
+                            {tab === 'presupuestos' && ['PENDIENTE','ACEPTADO','RECHAZADO'].map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </div>
                       )

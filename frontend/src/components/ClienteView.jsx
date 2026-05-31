@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { jsPDF } from 'jspdf'
 
 function ClienteView({
   tab, setTab, sesion,
@@ -10,56 +9,72 @@ function ClienteView({
   editando, setEditando, emptyFormByTab, cargarDatosCliente
 }) {
 
-  const [mostrarMensaje,  setMostrarMensaje]  = useState(false)
-  const [mensaje,         setMensaje]         = useState({ asunto: '', texto: '' })
-  const [mostrarPerfil,   setMostrarPerfil]   = useState(false)
-  const [perfilForm,      setPerfilForm]      = useState({ nombre: sesion.nombre || '', telefono: '', direccion: '', contrasena: '' })
+  const [mostrarMensaje, setMostrarMensaje] = useState(false)
+  const [mensaje,        setMensaje]        = useState({ asunto: '', texto: '' })
+  const [perfilForm,     setPerfilForm]     = useState({ nombre: '', telefono: '', direccion: '', contrasena: '' })
+
+  useEffect(() => {
+    if (tab === 'perfil' && sesion.clienteId) {
+      axios.get(`/api/clientes/${sesion.clienteId}`, authConfig())
+        .then(res => {
+          setPerfilForm({
+            nombre:    res.data.nombre    || '',
+            telefono:  res.data.telefono  || '',
+            direccion: res.data.direccion || '',
+            contrasena: ''
+          })
+        })
+        .catch(() => {})
+    }
+  }, [tab])
 
   const generarPDFFactura = (f) => {
     const doc = new jsPDF()
-
     doc.setFontSize(20)
     doc.setFont('helvetica', 'bold')
     doc.text('W&O TALLER MECÁNICO', 105, 25, { align: 'center' })
-
     doc.setFontSize(12)
     doc.setFont('helvetica', 'normal')
     doc.setDrawColor(100, 100, 100)
     doc.line(20, 32, 190, 32)
-
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
     doc.text(`Factura #${f.id}`, 20, 45)
-
     doc.setFontSize(11)
     doc.setFont('helvetica', 'normal')
     doc.text(`Fecha:`, 20, 58)
     doc.setFont('helvetica', 'bold')
     doc.text(`${f.fecha || '—'}`, 55, 58)
-
     doc.setFont('helvetica', 'normal')
     doc.text(`Total:`, 20, 68)
     doc.setFont('helvetica', 'bold')
     doc.text(`${f.total}€`, 55, 68)
-
     doc.setFont('helvetica', 'normal')
     doc.text(`Presupuesto vinculado:`, 20, 78)
     doc.setFont('helvetica', 'bold')
     doc.text(f.presupuesto ? `#${f.presupuesto.id}` : 'Sin presupuesto', 80, 78)
-
     doc.setDrawColor(100, 100, 100)
     doc.line(20, 88, 190, 88)
-
     doc.setFontSize(10)
     doc.setFont('helvetica', 'italic')
     doc.setTextColor(120, 120, 120)
     doc.text('Gracias por confiar en W&O Taller Mecánico', 105, 100, { align: 'center' })
-
     doc.save(`factura_${f.id}.pdf`)
   }
 
   const enviarMensaje = (e) => {
     e.preventDefault()
+    const msgs = JSON.parse(localStorage.getItem('mensajes_admin') || '[]')
+    msgs.unshift({
+      id:     Date.now(),
+      tipo:   'cliente',
+      fecha:  new Date().toISOString().split('T')[0],
+      leido:  false,
+      de:     sesion.nombre || sesion.auth?.email || 'Cliente',
+      asunto: mensaje.asunto,
+      texto:  mensaje.texto
+    })
+    localStorage.setItem('mensajes_admin', JSON.stringify(msgs))
     notify('Mensaje enviado al taller. Te contactaremos pronto.')
     setMostrarMensaje(false)
     setMensaje({ asunto: '', texto: '' })
@@ -68,8 +83,9 @@ function ClienteView({
   const guardarPerfil = (e) => {
     e.preventDefault()
     const body = { ...perfilForm }
+    if (!body.contrasena) delete body.contrasena
     axios.put(`/api/clientes/${sesion.clienteId}`, body, authConfig())
-      .then(() => { notify('Perfil actualizado'); setMostrarPerfil(false) })
+      .then(() => notify('Perfil actualizado'))
       .catch(() => notify('Error al actualizar perfil', 'err'))
   }
 
@@ -245,7 +261,10 @@ function ClienteView({
             <h3>✉️ Enviar mensaje al taller</h3>
             <form onSubmit={enviarMensaje}>
               <div className="field"><label>Asunto</label><input value={mensaje.asunto} onChange={e => setMensaje(m => ({ ...m, asunto: e.target.value }))} required /></div>
-              <div className="field"><label>Mensaje</label><textarea value={mensaje.texto} onChange={e => setMensaje(m => ({ ...m, texto: e.target.value }))} rows={4} required style={{ background: '#020617', border: '1px solid var(--line)', color: 'white', padding: '12px', borderRadius: '10px', width: '100%' }} /></div>
+              <div className="field">
+                <label>Mensaje</label>
+                <textarea value={mensaje.texto} onChange={e => setMensaje(m => ({ ...m, texto: e.target.value }))} rows={4} required style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--text)', padding: '12px', borderRadius: '10px', width: '100%', fontFamily: 'inherit', fontSize: '14px' }} />
+              </div>
               <div className="modal-actions">
                 <button className="login-btn" type="submit">Enviar</button>
                 <button type="button" className="btn-secondary" onClick={() => setMostrarMensaje(false)}>Cancelar</button>
