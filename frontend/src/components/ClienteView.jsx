@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import jsPDF from 'jspdf' // Asegúrate de tener importado jsPDF si lo usas directamente
 
 function ClienteView({
   tab, setTab, sesion,
   vehiculos, citas, presupuestos, facturas,
   authConfig, notify,
   onSave, form, setForm, mostrarForm, setMostrarForm,
-  editando, setEditando, emptyFormByTab, cargarDatosCliente
+  editando, setEditando, emptyFormByTab, cargarDatosCliente,
+  onEdit, onDelete // Recibimos las funciones de edición y borrado desde App
 }) {
 
   const [mostrarMensaje, setMostrarMensaje] = useState(false)
@@ -39,6 +41,7 @@ function ClienteView({
     doc.line(20, 32, 190, 32)
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
+
     doc.text(`Factura #${f.id}`, 20, 45)
     doc.setFontSize(11)
     doc.setFont('helvetica', 'normal')
@@ -59,6 +62,7 @@ function ClienteView({
     doc.setFont('helvetica', 'italic')
     doc.setTextColor(120, 120, 120)
     doc.text('Gracias por confiar en W&O Taller Mecánico', 105, 100, { align: 'center' })
+
     doc.save(`factura_${f.id}.pdf`)
   }
 
@@ -104,14 +108,14 @@ function ClienteView({
           <div className="panel-seccion">
             <h3>🚗 Mis Vehículos</h3>
             {vehiculos.length === 0 ? <p className="empty-text">Sin vehículos registrados.</p> : vehiculos.map(v => (
-              <div className="tarjeta-dato" key={v.id}><label>{v.matricula}</label><span>{v.marca} {v.modelo} ({v.anio})</span></div>
+               <div className="tarjeta-dato" key={v.id}><label>{v.matricula}</label><span>{v.marca} {v.modelo} ({v.anio})</span></div>
             ))}
           </div>
           <div className="panel-seccion">
             <h3>📅 Próximas Citas</h3>
             {citas.filter(c => c.estado !== 'CANCELADA').slice(0, 3).map(c => (
               <div className="tarjeta-dato" key={c.id}>
-                <label>{c.fecha} - {c.hora}</label>
+                 <label>{c.fecha} - {c.hora}</label>
                 <span>{c.descripcion || 'Sin descripción'}</span>
                 <span className={`badge badge-${c.estado?.toLowerCase()}`}>{c.estado}</span>
               </div>
@@ -124,14 +128,14 @@ function ClienteView({
               <div className="tarjeta-dato" key={p.id}>
                 <label>Presupuesto #{p.id} - {p.fecha}</label>
                 <span>{p.total}€</span>
-                <span className={`badge badge-${p.estado?.toLowerCase()}`}>{p.estado}</span>
+                 <span className={`badge badge-${p.estado?.toLowerCase()}`}>{p.estado}</span>
               </div>
             ))}
             {presupuestos.length === 0 && <p className="empty-text">Sin presupuestos.</p>}
           </div>
           <div className="panel-seccion">
             <h3>Acciones rápidas</h3>
-            <button className="login-btn" style={{ marginBottom: '10px' }} onClick={() => { setTab('citas'); setForm(emptyFormByTab('citas','CLIENTE')); setMostrarForm(true) }}>📅 Solicitar cita</button>
+             <button className="login-btn" style={{ marginBottom: '10px' }} onClick={() => { setTab('citas'); setForm(emptyFormByTab('citas','CLIENTE')); setMostrarForm(true) }}>📅 Solicitar cita</button>
             <button className="btn-cancel" style={{ width: '100%', padding: '12px', borderRadius: '10px' }} onClick={() => setMostrarMensaje(true)}>✉️ Enviar mensaje al taller</button>
           </div>
         </div>
@@ -140,13 +144,19 @@ function ClienteView({
       {tab === 'vehiculos' && (
         <div className="panel-seccion">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3>🚗 Mis Vehículos</h3>
+             <h3>🚗 Mis Vehículos</h3>
             <button className="login-btn" onClick={() => { setForm(emptyFormByTab('vehiculos','CLIENTE')); setMostrarForm(true); setEditando(null) }}>+ Añadir vehículo</button>
           </div>
           {vehiculos.length === 0 ? <p className="empty-text">Sin vehículos registrados.</p> : vehiculos.map(v => (
-            <div className="tarjeta-dato" key={v.id}>
-              <label>{v.matricula}</label>
-              <span>{v.marca} {v.modelo} — {v.anio}</span>
+            <div className="tarjeta-dato" key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <label>{v.matricula}</label>
+                <span>{v.marca} {v.modelo} — {v.anio}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button className="btn-edit" onClick={() => onEdit(v)}>✏️ Editar</button>
+                <button className="btn-cancel" style={{ padding: '6px 12px', borderRadius: '6px' }} onClick={() => onDelete(v.id)}>🗑️ Eliminar</button>
+              </div>
             </div>
           ))}
           {mostrarForm && (
@@ -175,16 +185,24 @@ function ClienteView({
             <button className="login-btn" onClick={() => { setForm(emptyFormByTab('citas','CLIENTE')); setMostrarForm(true); setEditando(null) }}>+ Solicitar cita</button>
           </div>
           {citas.map(c => (
-            <div className="tarjeta-dato" key={c.id}>
-              <label>{c.fecha} a las {c.hora}</label>
-              <span>{c.descripcion || 'Sin descripción'}</span>
-              <span className={`badge badge-${c.estado?.toLowerCase()}`}>{c.estado}</span>
+            <div className="tarjeta-dato" key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <label>{c.fecha} a las {c.hora}</label>
+                <span>{c.descripcion || 'Sin descripción'}</span>
+                <span className={`badge badge-${c.estado?.toLowerCase()}`}>{c.estado}</span>
+              </div>
+              {c.estado === 'PENDIENTE' && (
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="btn-edit" onClick={() => onEdit(c)}>✏️ Editar</button>
+                  <button className="btn-cancel" style={{ padding: '6px 12px', borderRadius: '6px' }} onClick={() => onDelete(c.id)}>🗑️ Cancelar</button>
+                </div>
+              )}
             </div>
           ))}
           {citas.length === 0 && <p className="empty-text">Sin citas registradas.</p>}
           {mostrarForm && (
             <form onSubmit={onSave} style={{ marginTop: '20px' }}>
-              <div className="form-grid">
+               <div className="form-grid">
                 <div className="field"><label>Fecha</label><input key="cli-cita-fecha" type="date" value={form.fecha || ''} onChange={e => setForm(p => ({ ...p, fecha: e.target.value }))} required /></div>
                 <div className="field"><label>Hora</label><input key="cli-cita-hora" type="time" value={form.hora || ''} onChange={e => setForm(p => ({ ...p, hora: e.target.value }))} required /></div>
                 <div className="field"><label>Descripción</label><input key="cli-cita-desc" value={form.descripcion || ''} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} /></div>
@@ -195,14 +213,14 @@ function ClienteView({
                     {vehiculos.map(v => <option key={v.id} value={v.id}>{v.matricula} - {v.marca}</option>)}
                   </select>
                 </div>
-              </div>
+               </div>
               <div className="form-actions">
-                <button className="login-btn" type="submit">Solicitar</button>
+                <button className="login-btn" type="submit">{editando ? 'Guardar Cambios' : 'Solicitar'}</button>
                 <button type="button" className="btn-cancel" onClick={() => setMostrarForm(false)}>Cancelar</button>
               </div>
             </form>
           )}
-        </div>
+         </div>
       )}
 
       {tab === 'presupuestos' && (
@@ -211,7 +229,7 @@ function ClienteView({
           {presupuestos.length === 0 ? <p className="empty-text">Sin presupuestos.</p> : presupuestos.map(p => (
             <div className="tarjeta-dato" key={p.id}>
               <label>Presupuesto #{p.id} — {p.fecha}</label>
-              <span style={{ fontSize: '22px', fontWeight: '900' }}>{p.total}€</span>
+               <span style={{ fontSize: '22px', fontWeight: '900' }}>{p.total}€</span>
               <span className={`badge badge-${p.estado?.toLowerCase()}`}>{p.estado}</span>
               {p.vehiculo && <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Vehículo: {p.vehiculo.matricula}</span>}
             </div>
@@ -220,7 +238,7 @@ function ClienteView({
       )}
 
       {tab === 'facturas' && (
-        <div className="panel-seccion">
+         <div className="panel-seccion">
           <h3>🧾 Mis Facturas</h3>
           {facturas.length === 0 ? <p className="empty-text">Sin facturas.</p> : facturas.map(f => (
             <div className="tarjeta-dato" key={f.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -228,7 +246,7 @@ function ClienteView({
                 <label>Factura #{f.id} — {f.fecha}</label>
                 <span style={{ fontSize: '22px', fontWeight: '900' }}>{f.total}€</span>
               </div>
-              <button className="btn-edit" onClick={() => generarPDFFactura(f)}>📄 Descargar</button>
+               <button className="btn-edit" onClick={() => generarPDFFactura(f)}>📄 Descargar</button>
             </div>
           ))}
         </div>
@@ -238,18 +256,18 @@ function ClienteView({
         <div className="panel-seccion" style={{ maxWidth: '500px' }}>
           <h3>👤 Mis Datos</h3>
           <form onSubmit={guardarPerfil}>
-            {[['nombre','Nombre'],['telefono','Teléfono'],['direccion','Dirección']].map(([k,l]) => (
+             {[['nombre','Nombre'],['telefono','Teléfono'],['direccion','Dirección']].map(([k,l]) => (
               <div className="field" key={k}>
                 <label>{l}</label>
                 <input value={perfilForm[k] || ''} onChange={e => setPerfilForm(p => ({ ...p, [k]: e.target.value }))} />
               </div>
             ))}
-            <div className="field">
+             <div className="field">
               <label>Nueva contraseña (dejar vacío para no cambiar)</label>
               <input type="password" placeholder="Nueva contraseña" value={perfilForm.contrasena} onChange={e => setPerfilForm(p => ({ ...p, contrasena: e.target.value }))} />
             </div>
             <div className="form-actions">
-              <button className="login-btn" type="submit">Guardar cambios</button>
+              <button  className="login-btn" type="submit">Guardar cambios</button>
             </div>
           </form>
         </div>
@@ -260,7 +278,7 @@ function ClienteView({
           <div className="modal-box">
             <h3>✉️ Enviar mensaje al taller</h3>
             <form onSubmit={enviarMensaje}>
-              <div className="field"><label>Asunto</label><input value={mensaje.asunto} onChange={e => setMensaje(m => ({ ...m, asunto: e.target.value }))} required /></div>
+               <div className="field"><label>Asunto</label><input value={mensaje.asunto} onChange={e => setMensaje(m => ({ ...m, asunto: e.target.value }))} required /></div>
               <div className="field">
                 <label>Mensaje</label>
                 <textarea value={mensaje.texto} onChange={e => setMensaje(m => ({ ...m, texto: e.target.value }))} rows={4} required style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--text)', padding: '12px', borderRadius: '10px', width: '100%', fontFamily: 'inherit', fontSize: '14px' }} />

@@ -1,85 +1,86 @@
 package com.taller.Taller.modelo;
 
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;       // <- IMPORTANTE: Nueva importación
+import org.hibernate.annotations.OnDeleteAction; // <- IMPORTANTE: Nueva importación
 
 @Entity
 public class Vehiculo {
 
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-@Column(unique = true)
-private String matricula;
+    @Column(unique = true)
+    private String matricula;
 
-private String marca;
-private String modelo;
-private int anio;
+    private String marca;
+    private String modelo;
+    private int anio;
 
-@ManyToOne
-@JoinColumn(name = "cliente_id")
-private Cliente cliente;
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
 
-@OneToMany(mappedBy = "vehiculo")
-@JsonIgnore
-private List<Cita> citas;
+    @OneToMany(mappedBy = "vehiculo")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
+    private List<Cita> citas;
 
-@OneToMany(mappedBy = "vehiculo")
-@JsonIgnore
-private List<Presupuesto> presupuestos;
+    @OneToMany(mappedBy = "vehiculo")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
+    private List<Presupuesto> presupuestos;
 
-public Vehiculo(){}
+    public Vehiculo(){}
 
-public Long getId(){
-	return id;
-}
+    public Long getId(){
+        return id;
+    }
 
-public void setId(Long id){
-	this.id=id;
-}
+    public void setId(Long id){
+        this.id=id;
+    }
 
-public String getMatricula(){
-	return matricula;
-}
+    public String getMatricula(){
+        return matricula;
+    }
 
-public void setMatricula(String matricula){
-	this.matricula=matricula;
-}
+    public void setMatricula(String matricula){
+        this.matricula=matricula;
+    }
 
-public String getMarca(){
-	return marca;
-}
+    public String getMarca(){
+        return marca;
+    }
 
-public void setMarca(String marca){
-	this.marca=marca;
-}
+    public void setMarca(String marca){
+        this.marca=marca;
+    }
 
-public String getModelo(){
-	return modelo;
-}
+    public String getModelo(){
+        return modelo;
+    }
 
-public void setModelo(String modelo){
-	this.modelo=modelo;
-}
+    public void setModelo(String modelo){
+        this.modelo=modelo;
+    }
 
-public int getAnio(){
-	return anio;
-}
+    public int getAnio(){
+        return anio;
+    }
 
-public void setAnio(int anio){
-	this.anio=anio;
-}
+    public void setAnio(int anio){
+        this.anio=anio;
+    }
 
-public Cliente getCliente(){
-	return cliente;
-}
+    public Cliente getCliente(){
+        return cliente;
+    }
 
-public void setCliente(Cliente cliente){
-	this.cliente=cliente;
-}
-
+    public void setCliente(Cliente cliente){
+        this.cliente=cliente;
+    }
 }

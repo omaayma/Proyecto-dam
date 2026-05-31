@@ -82,7 +82,7 @@ function App() {
   }
 
   const authConfig = () => ({
-    headers: { Authorization: `Basic ${btoa(sesion.auth.email + ':' + sesion.auth.pass)}` }
+     headers: { Authorization: `Basic ${btoa(sesion.auth.email + ':' + sesion.auth.pass)}` }
   })
 
   const validarEmail     = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
@@ -135,6 +135,7 @@ function App() {
 
   useEffect(() => {
     if (!sesion.logueado) return
+
     if (rol === 'CLIENTE') { cargarDatosCliente(); return }
     if (tab === 'dashboard') { cargarStats(); return }
     if (!tab || tab === 'configuracion' || tab === 'mensajes') return
@@ -147,7 +148,7 @@ function App() {
   }, [tab, sesion.logueado])
 
   const handleLogin = (e) => {
-    e.preventDefault()
+     e.preventDefault()
     const email = e.target.email.value
     const pass  = e.target.password.value
     const cfg   = { headers: { Authorization: `Basic ${btoa(email + ':' + pass)}` } }
@@ -181,7 +182,7 @@ function App() {
         } else {
           notify('Error al registrar. Comprueba los datos.', 'err')
         }
-      })
+       })
   }
 
   const emptyFormByTab = (t, rolUpper) => {
@@ -211,7 +212,7 @@ function App() {
     } else if (tab === 'facturas') {
       setForm({ ...item, presupuestoId: item?.presupuesto?.id || '', presupuesto: undefined })
     } else if (tab === 'vehiculos') {
-      setForm({ ...item, clienteId: item?.cliente?.id || '', cliente: undefined })
+       setForm({ ...item, clienteId: item?.cliente?.id || '', cliente: undefined })
     } else {
       setForm({ ...item })
     }
@@ -224,7 +225,11 @@ function App() {
   const confirmarEliminar = () => {
     axios.delete(`/api/${tab}/${modalEliminar.id}`, authConfig())
       .then(() => {
-        setData(prev => prev.filter(i => i.id !== modalEliminar.id))
+        if (rol === 'CLIENTE') {
+          cargarDatosCliente()
+        } else {
+          setData(prev => prev.filter(i => i.id !== modalEliminar.id))
+        }
         notify('Registro eliminado')
         setModalEliminar({ open: false, id: null })
       })
@@ -242,14 +247,15 @@ function App() {
       if (tab === 'vehiculos') body.cliente = { id: sesion.clienteId }
       if (tab === 'citas') {
         if (!vehiculosCliente.some(v => v.id === parseInt(body.vehiculoId || '0'))) {
-          notify('Selecciona uno de tus vehículos', 'err'); return
+          notify('Selecciona uno de tus vehículos', 'err');
+          return
         }
         body.estado = body.estado || 'PENDIENTE'
       }
     }
-    if (body.vehiculoId)    { body.vehiculo    = { id: parseInt(body.vehiculoId) };    delete body.vehiculoId }
-    if (body.empleadoId)    { body.empleado    = { id: parseInt(body.empleadoId) };    delete body.empleadoId }
-    if (body.clienteId)     { body.cliente     = { id: parseInt(body.clienteId) };     delete body.clienteId }
+    if (body.vehiculoId)    { body.vehiculo    = { id: parseInt(body.vehiculoId) }; delete body.vehiculoId }
+    if (body.empleadoId)    { body.empleado    = { id: parseInt(body.empleadoId) }; delete body.empleadoId }
+    if (body.clienteId)     { body.cliente     = { id: parseInt(body.clienteId) }; delete body.clienteId }
     if (body.presupuestoId) { body.presupuesto = { id: parseInt(body.presupuestoId) }; delete body.presupuestoId }
 
     const req = editando
@@ -264,7 +270,7 @@ function App() {
     }).catch(err => {
       if (err.response?.status === 409 || err.response?.status === 500) {
         notify('Ya existe un registro con ese DNI, email o matrícula', 'err')
-      } else {
+       } else {
         notify('Error al guardar: ' + (err.response?.data?.message || err.message), 'err')
       }
     })
@@ -294,7 +300,7 @@ function App() {
     return (
       <div className="auth-wrapper">
         {toast && <div className={`toast toast-${toast.type}`}>{toast.text}</div>}
-        <div className="auth-card">
+         <div className="auth-card">
           <div className="auth-logo-img">
             <img src="/logo.png" alt="W&O" style={{ height: '60px', objectFit: 'contain' }} />
           </div>
@@ -304,25 +310,25 @@ function App() {
               <form onSubmit={handleLogin}>
                 <div className="field"><label>Email</label><input name="email" type="email" placeholder="tu@email.com" required /></div>
                 <div className="field"><label>Contraseña</label><input name="password" type="password" placeholder="••••••••" required /></div>
-                <button className="login-btn" type="submit">Acceder</button>
+                 <button className="login-btn" type="submit">Acceder</button>
                 <p className="auth-switch">¿Cliente nuevo? <span onClick={() => setView('register')}>Crear cuenta</span></p>
                 <p className="auth-switch"><span onClick={() => setView('landing')} style={{ color: 'var(--muted)', fontSize: '12px' }}>← Volver al inicio</span></p>
               </form>
             </>
           ) : (
-            <>
+             <>
               <h2 className="auth-title">Registro</h2>
               <form onSubmit={handleRegister}>
                 {[['nombre','Nombre'],['apellidos','Apellidos'],['dni','DNI (ej: 12345678A)'],['email','Email'],['telefono','Teléfono'],['direccion','Dirección']].map(([n,l]) => (
                   <div className="field" key={n}><label>{l}</label><input name={n} placeholder={l} required={['nombre','dni','email'].includes(n)} /></div>
                 ))}
-                <div className="field"><label>Contraseña</label><input name="password" type="password" placeholder="Mínimo 4 caracteres" required /></div>
+                  <div className="field"><label>Contraseña</label><input name="password" type="password" placeholder="Mínimo 4 caracteres" required /></div>
                 <button className="login-btn" type="submit">Registrarme</button>
                 <p className="auth-switch"><span onClick={() => setView('login')}>← Volver al login</span></p>
               </form>
             </>
           )}
-        </div>
+         </div>
       </div>
     )
   }
@@ -363,7 +369,7 @@ function App() {
             notify={notify}
             idioma={idioma}
             onIdioma={setIdioma}
-          />
+           />
         )}
 
         {rol === 'CLIENTE' && (
@@ -387,11 +393,13 @@ function App() {
             emptyFormByTab={emptyFormByTab}
             cargarDatosCliente={cargarDatosCliente}
             idioma={idioma}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         )}
 
         {rol !== 'CLIENTE' && tab === 'dashboard' && (
-          <Dashboard stats={statsAdmin} rol={rol} onNavigate={(t) => { setTab(t); setMostrarForm(false) }} />
+           <Dashboard stats={statsAdmin} rol={rol} onNavigate={(t) => { setTab(t); setMostrarForm(false) }} />
         )}
 
         {rol !== 'CLIENTE' && tab === 'mensajes' && (
@@ -407,7 +415,7 @@ function App() {
               mostrarCalendario={tab === 'citas'}
               vistaCalendario={vistaCalendario}
               onToggleCalendario={() => setVistaCalendario(v => !v)}
-            />
+             />
 
             {tab === 'piezas' && data.some(p => p.stock < 5) && (
               <div className="alerta-stock">
@@ -437,28 +445,29 @@ function App() {
             {mostrarForm && (
               <div className="form-card">
                 <form onSubmit={onSave}>
-                  <h3 style={{ marginBottom: '20px', color: 'var(--muted)' }}>
+                   <h3 style={{ marginBottom: '20px', color: 'var(--muted)' }}>
                     {editando ? 'Editar registro' : 'Nuevo registro'}
                   </h3>
                   <div className="form-grid">
                     {Object.keys(form).map(key => {
                       if (['id','vehiculo','empleado','cliente','presupuesto','citas','presupuestos','facturas','piezas'].includes(key)) return null
+
                       if (key === 'vehiculoId') return (
                         <div className="field" key={key}>
                           <label>Vehículo</label>
-                          <select value={form.vehiculoId || ''} onChange={e => setForm(prev => ({ ...prev, vehiculoId: e.target.value }))}>
+                          <select value={form.vehiculoId || ''} onChange={e => setForm(prev => ({ ...prev, presidentialId: e.target.value, vehiculoId: e.target.value }))}>
                             <option value="">Seleccionar vehículo</option>
                             {vehiculos.map(v => <option key={v.id} value={v.id}>{v.matricula} - {v.marca} {v.modelo}</option>)}
                           </select>
-                        </div>
+                         </div>
                       )
                       if (key === 'empleadoId') return (
                         <div className="field" key={key}>
-                          <label>Empleado</label>
+                           <label>Empleado</label>
                           <select value={form.empleadoId || ''} onChange={e => setForm(prev => ({ ...prev, empleadoId: e.target.value }))}>
                             <option value="">Seleccionar empleado</option>
                             {empleados.map(e => <option key={e.id} value={e.id}>{e.nombre} ({e.puesto || 'Sin puesto'})</option>)}
-                          </select>
+                           </select>
                         </div>
                       )
                       if (key === 'clienteId') return (
@@ -466,59 +475,59 @@ function App() {
                           <label>Cliente</label>
                           <select value={form.clienteId || ''} onChange={e => setForm(prev => ({ ...prev, clienteId: e.target.value }))}>
                             <option value="">Seleccionar cliente</option>
-                            {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre} {c.apellidos} ({c.dni})</option>)}
+                             {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre} {c.apellidos} ({c.dni})</option>)}
                           </select>
                         </div>
                       )
                       if (key === 'presupuestoId') return (
                         <div className="field" key={key}>
                           <label>Presupuesto</label>
-                          <select value={form.presupuestoId || ''} onChange={e => setForm(prev => ({ ...prev, presupuestoId: e.target.value }))}>
+                           <select value={form.presupuestoId || ''} onChange={e => setForm(prev => ({ ...prev, presupuestoId: e.target.value }))}>
                             <option value="">Seleccionar presupuesto</option>
                             {presupuestos.map(p => <option key={p.id} value={p.id}>#{p.id} - {p.total}€ ({p.estado})</option>)}
-                          </select>
+                           </select>
                         </div>
                       )
                       if (key === 'estado') return (
-                        <div className="field" key={key}>
+                         <div className="field" key={key}>
                           <label>Estado</label>
                           <select value={form.estado || ''} onChange={e => setForm(prev => ({ ...prev, estado: e.target.value }))}>
                             {tab === 'citas'        && ['PENDIENTE','CONFIRMADA','CANCELADA','COMPLETADA'].map(s => <option key={s} value={s}>{s}</option>)}
                             {tab === 'presupuestos' && ['PENDIENTE','ACEPTADO','RECHAZADO'].map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
-                        </div>
+                         </div>
                       )
                       if (key === 'rol' && tab === 'empleados') return (
                         <div className="field" key={key}>
-                          <label>Rol</label>
+                           <label>Rol</label>
                           <select value={form.rol || 'EMPLEADO'} onChange={e => setForm(prev => ({ ...prev, rol: e.target.value }))}>
                             <option value="EMPLEADO">EMPLEADO</option>
                             <option value="ADMIN">ADMIN</option>
                           </select>
-                        </div>
+                         </div>
                       )
                       return (
                         <div className="field" key={key}>
-                          <label>{key}</label>
+                           <label>{key}</label>
                           <input
                             key={`${tab}-${editando?.id || 'new'}-${key}`}
                             type={
-                              key === 'contrasena' ? 'password' :
-                              key === 'fecha'      ? 'date'     :
-                              key === 'hora'       ? 'time'     :
-                              key === 'anio' || key === 'total' || key === 'precio' || key === 'stock' ? 'number' :
-                              'text'
-                            }
+                               key === 'contrasena' ? 'password' :
+                               key === 'fecha'      ? 'date'     :
+                               key === 'hora'       ? 'time'     :
+                               key === 'anio' || key === 'total' || key === 'precio' || key === 'stock' ? 'number' :
+                               'text'
+                             }
                             value={form[key] || ''}
                             onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
                           />
                         </div>
-                      )
+                       )
                     })}
                   </div>
                   <div className="form-actions">
                     <button className="login-btn" type="submit">Guardar</button>
-                    <button type="button" className="btn-cancel" onClick={() => { setMostrarForm(false); setEditando(null); setForm({}) }}>Cancelar</button>
+                     <button type="button" className="btn-cancel" onClick={() => { setMostrarForm(false); setEditando(null); setForm({}) }}>Cancelar</button>
                   </div>
                 </form>
               </div>
