@@ -1,172 +1,375 @@
-import React from 'react'
+import React, { useState } from 'react'
+ 
 
 const t = {
   es: {
-    navLogin:      'Iniciar sesión',
-    heroH1:        'Tu taller de confianza',
-    heroP1:        'En W&O Autogroup ponemos a tu disposición el mejor servicio mecánico. Revisiones, reparaciones y presupuestos sin sorpresas.',
-    heroP2:        'Cada vehículo que entra en nuestro taller recibe un diagnóstico detallado, un presupuesto claro y un seguimiento completo hasta la entrega. Sin letra pequeña, sin costes ocultos. Porque la transparencia y la calidad no son opcionales para nosotras.',
-    btnPrimary:    'Crear cuenta gratuita',
-    btnSecondary:  'Ya tengo cuenta',
-    serviciosH2:   '¿Qué hacemos?',
+    navServicios: 'Servicios',
+    navFlujo: 'Cómo funciona',
+    navProyecto: 'Proyecto',
+    navContacto: 'Contacto',
+    navLogin: 'Iniciar sesión',
+ 
+
+    heroKicker: 'W&O AUTOGROUP',
+    heroTitle1: 'Cuidamos tu coche',
+    heroTitle2: 'como si fuera',
+    heroTitle3: 'nuestro',
+    heroBtnPrimary: 'Crear cuenta',
+    heroBtnSecondary: 'Ya tengo cuenta',
+    heroFeature1: 'Diagnóstico rápido',
+    heroFeature2: 'Sin esperas',
+    heroFeature3: 'Transparencia total',
+ 
+
+    serviciosKicker: 'Servicios',
+    serviciosTitle: 'Nuestros servicios',
     servicios: [
-      ['🔧','Reparación mecánica','Diagnóstico y reparación de todo tipo de averías en vehículos de cualquier marca.'],
-      ['🛞','Cambio de neumáticos','Servicio rápido de montaje y equilibrado de neumáticos con las mejores marcas.'],
-      ['🛢️','Mantenimiento','Cambios de aceite, filtros, correas y revisiones periódicas para mantener tu coche a punto.'],
-      ['📋','Presupuesto sin compromiso','Solicita tu presupuesto online y te contactamos en menos de 24 horas.'],
-      ['📅','Cita online','Reserva tu cita desde la aplicación y olvídate de esperas innecesarias.'],
-      ['🧾','Facturación digital','Consulta y descarga tus facturas desde tu perfil en cualquier momento.'],
+      ['🔧', 'Reparación mecánica', 'Averías, revisiones y reparación general del vehículo.'],
+      ['🛞', 'Neumáticos', 'Cambio, equilibrado y revisión de desgaste.'],
+      ['🛢️', 'Mantenimiento', 'Aceite, filtros, correas y revisiones periódicas.'],
+      ['📋', 'Presupuestos', 'Solicitud online con respuesta clara y organizada.'],
+      ['📅', 'Cita online', 'Reserva tu cita desde la plataforma sin llamadas.'],
+      ['🧾', 'Facturación', 'Consulta y descarga tus facturas cuando quieras.'],
     ],
-    nosotrasH2:    'Sobre nosotras',
-    nosotrasIntro: 'W&O Autogroup es un proyecto desarrollado con ilusión y dedicación por dos estudiantes de Desarrollo de Aplicaciones Multiplataforma.',
-    omaymaDesc:    'Responsable de la lógica de negocio y la gestión de datos de W&O.',
-    wasimaDesc:    'Responsable del frontend y la arquitectura visual de W&O.',
-    nosotrasFooter:'Este proyecto nació como trabajo de fin de curso del ciclo DAM y representa nuestra visión de cómo debería ser la gestión digital de un taller mecánico moderno.',
-    contactoH2:    'Contacto',
-    contactoP:     '¿Tienes alguna pregunta o quieres saber más sobre nuestros servicios? Estamos aquí para ayudarte.',
-    emailLabel:    'Email',
-    telefonoLabel: 'Teléfono',
-    horarioLabel:  'Horario',
-    horarioVal:    'Lunes a viernes · 9:00 – 19:00',
-    ctaH2:         '¿Eres cliente nuevo?',
-    ctaP:          'Regístrate gratis y gestiona tu vehículo, citas y facturas desde cualquier dispositivo.',
-    footerRights:  '© 2026 W&O Autogroup · Todos los derechos reservados',
-    footerDev:     'Desarrollado por Omayma Zemmouri y Wasima El Ouastani · Proyecto DAM 2026',
+ 
+
+    flujoKicker: 'Cómo funciona',
+    flujoTitle: 'Una experiencia simple y clara',
+    pasos: [
+      ['01', 'Registra tu vehículo'],
+      ['02', 'Solicita tu cita'],
+      ['03', 'Sigue el servicio'],
+    ],
+ 
+
+    proyectoKicker: 'Proyecto',
+    proyectoTitle: 'Detrás de W&O',
+    proyectoText:
+      'Un proyecto de DAM pensado para digitalizar la gestión de talleres con una imagen más profesional, moderna y cercana.',
+    omaymaRole: 'Backend & lógica',
+    omaymaDesc: 'Parte funcional, lógica de negocio y estructura de datos.',
+    wasimaRole: 'Frontend & diseño',
+    wasimaDesc: 'Interfaz, experiencia visual e identidad de la aplicación.',
+ 
+
+    contactoKicker: 'Contacto',
+    contactoTitle: 'Contacto',
+    emailLabel: 'Email',
+    phoneLabel: 'Teléfono',
+    hoursLabel: 'Horario',
+    hoursValue: 'Lunes a viernes · 9:00 – 19:00',
+ 
+
+    ctaKicker: 'Empieza hoy',
+    ctaTitle: 'Gestiona tu taller con una experiencia más visual',
+    ctaText: 'Regístrate gratis y accede a una forma más clara y profesional de trabajar.',
+    footerRights: '© 2026 W&O Autogroup · Todos los derechos reservados',
+    footerDev: 'Desarrollado por Omayma Zemmouri y Wasima El Ouastani · Proyecto DAM 2026',
   },
+ 
+
   en: {
-    navLogin:      'Log in',
-    heroH1:        'Your trusted garage',
-    heroP1:        'At W&O Autogroup we offer you the best mechanical service. Inspections, repairs and quotes with no surprises.',
-    heroP2:        'Every vehicle that comes into our workshop receives a detailed diagnosis, a clear quote and full follow-up until delivery. No small print, no hidden costs. Because transparency and quality are non-negotiable for us.',
-    btnPrimary:    'Create free account',
-    btnSecondary:  'I already have an account',
-    serviciosH2:   'What do we do?',
+    navServicios: 'Services',
+    navFlujo: 'How it works',
+    navProyecto: 'Project',
+    navContacto: 'Contact',
+    navLogin: 'Log in',
+ 
+
+    heroKicker: 'W&O AUTOGROUP',
+    heroTitle1: 'We take care of your car',
+    heroTitle2: 'as if it were',
+    heroTitle3: 'our own',
+    heroBtnPrimary: 'Create account',
+    heroBtnSecondary: 'I already have one',
+    heroFeature1: 'Fast diagnosis',
+    heroFeature2: 'No waiting',
+    heroFeature3: 'Full transparency',
+ 
+
+    serviciosKicker: 'Services',
+    serviciosTitle: 'Our services',
     servicios: [
-      ['🔧','Mechanical repair','Diagnosis and repair of all kinds of breakdowns in vehicles of any brand.'],
-      ['🛞','Tyre change','Fast tyre fitting and balancing service with the best brands.'],
-      ['🛢️','Maintenance','Oil changes, filters, belts and regular inspections to keep your car in top condition.'],
-      ['📋','No-obligation quote','Request your quote online and we will contact you within 24 hours.'],
-      ['📅','Online booking','Book your appointment from the app and forget about unnecessary waiting.'],
-      ['🧾','Digital invoicing','View and download your invoices from your profile at any time.'],
+      ['🔧', 'Mechanical repair', 'Breakdowns, inspections and general vehicle repair.'],
+      ['🛞', 'Tyres', 'Replacement, balancing and wear inspection.'],
+      ['🛢️', 'Maintenance', 'Oil, filters, belts and regular inspections.'],
+      ['📋', 'Quotes', 'Online request with a clear and organised response.'],
+      ['📅', 'Online booking', 'Book your appointment through the platform.'],
+      ['🧾', 'Invoicing', 'View and download your invoices anytime.'],
     ],
-    nosotrasH2:    'About us',
-    nosotrasIntro: 'W&O Autogroup is a project developed with enthusiasm and dedication by two Multiplatform Application Development students.',
-    omaymaDesc:    'Responsible for the business logic and data management of W&O.',
-    wasimaDesc:    'Responsible for the frontend and visual architecture of W&O.',
-    nosotrasFooter:'This project was born as a final-year project for the DAM degree and represents our vision of what digital management of a modern garage should look like.',
-    contactoH2:    'Contact',
-    contactoP:     'Do you have any questions or want to know more about our services? We are here to help.',
-    emailLabel:    'Email',
-    telefonoLabel: 'Phone',
-    horarioLabel:  'Opening hours',
-    horarioVal:    'Monday to Friday · 9:00 – 19:00',
-    ctaH2:         'Are you a new customer?',
-    ctaP:          'Register for free and manage your vehicle, appointments and invoices from any device.',
-    footerRights:  '© 2026 W&O Autogroup · All rights reserved',
-    footerDev:     'Developed by Omayma Zemmouri and Wasima El Ouastani · DAM Project 2026',
-  }
+ 
+
+    flujoKicker: 'How it works',
+    flujoTitle: 'A simple and clear experience',
+    pasos: [
+      ['01', 'Register your vehicle'],
+      ['02', 'Request your booking'],
+      ['03', 'Track the service'],
+    ],
+ 
+
+    proyectoKicker: 'Project',
+    proyectoTitle: 'Behind W&O',
+    proyectoText:
+      'A DAM project designed to digitalise workshop management with a more modern, professional and human visual identity.',
+    omaymaRole: 'Backend & logic',
+    omaymaDesc: 'Functional structure, business logic and data layer.',
+    wasimaRole: 'Frontend & design',
+    wasimaDesc: 'Interface, visual experience and application identity.',
+ 
+
+    contactoKicker: 'Contact',
+    contactoTitle: 'Contact',
+    emailLabel: 'Email',
+    phoneLabel: 'Phone',
+    hoursLabel: 'Hours',
+    hoursValue: 'Monday to Friday · 9:00 – 19:00',
+ 
+
+    ctaKicker: 'Start today',
+    ctaTitle: 'Manage your workshop with a more visual experience',
+    ctaText: 'Register for free and discover a clearer and more professional way of working.',
+    footerRights: '© 2026 W&O Autogroup · All rights reserved',
+    footerDev: 'Developed by Omayma Zemmouri and Wasima El Ouastani · DAM Project 2026',
+  },
 }
+ 
+
+function FounderCard({ imageSrc, fallback, role, name, desc }) {
+  const [imgError, setImgError] = useState(false)
+ 
+
+  return (
+    <article className="landing-founder-card">
+      <div className="landing-founder-photo-wrap">
+        {!imgError ? (
+          <img
+            src={imageSrc}
+            alt={name}
+            className="landing-founder-photo"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="landing-founder-fallback">{fallback}</div>
+        )}
+      </div>
+ 
+
+      <span className="landing-founder-role">{role}</span>
+      <h3>{name}</h3>
+      <p>{desc}</p>
+    </article>
+  )
+}
+ 
 
 function Landing({ onLogin, onRegister, idioma }) {
-  const tx = t[idioma] || t['es']
+  const tx = t[idioma] || t.es
+ 
 
   return (
     <div className="landing-wrapper">
+      <div className="landing-bg-blur landing-bg-blur-red" />
+      <div className="landing-bg-blur landing-bg-blur-dark" />
+ 
 
       <nav className="landing-nav">
-        <img src="/logo.png" alt="W&O Autogroup" className="landing-logo" />
-        <button className="landing-btn-nav" onClick={onLogin}>{tx.navLogin}</button>
-      </nav>
+        <a href="#top" className="landing-brand">
+          <img src="/logo.png" alt="W&O Autogroup" className="landing-logo" />
+        </a>
+ 
 
-      <section className="landing-hero">
-        <div className="landing-hero-content">
-          <h1>{tx.heroH1}</h1>
-          <p>{tx.heroP1}</p>
-          <p style={{ fontSize: '16px', color: '#64748b', lineHeight: '1.7', marginBottom: '36px' }}>{tx.heroP2}</p>
-          <div className="landing-hero-btns">
-            <button className="landing-btn-primary"   onClick={onRegister}>{tx.btnPrimary}</button>
-            <button className="landing-btn-secondary" onClick={onLogin}>{tx.btnSecondary}</button>
-          </div>
+        <div className="landing-nav-links">
+          <a href="#servicios">{tx.navServicios}</a>
+          <a href="#flujo">{tx.navFlujo}</a>
+          <a href="#proyecto">{tx.navProyecto}</a>
+          <a href="#contacto">{tx.navContacto}</a>
         </div>
-      </section>
+ 
 
-      <section className="landing-servicios" id="servicios">
-        <h2>{tx.serviciosH2}</h2>
-        <div className="landing-cards">
-          {tx.servicios.map(([icon, titulo, desc]) => (
-            <div className="landing-card" key={titulo}>
-              <div className="landing-card-icon">{icon}</div>
-              <h3>{titulo}</h3>
-              <p>{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="landing-nosotras" id="nosotras">
-        <h2>{tx.nosotrasH2}</h2>
-        <p className="landing-nosotras-intro">{tx.nosotrasIntro}</p>
-        <div className="landing-nosotras-cards">
-          <div className="landing-nosotras-card">
-            <div className="landing-nosotras-avatar">O</div>
-            <h3>Omayma Zemmouri</h3>
-            <p>{tx.omaymaDesc}</p>
-          </div>
-          <div className="landing-nosotras-card">
-            <div className="landing-nosotras-avatar">W</div>
-            <h3>Wasima El Ouastani</h3>
-            <p>{tx.wasimaDesc}</p>
-          </div>
-        </div>
-        <p className="landing-nosotras-footer">{tx.nosotrasFooter}</p>
-      </section>
-
-      <section className="landing-contacto" id="contacto">
-        <h2>{tx.contactoH2}</h2>
-        <p>{tx.contactoP}</p>
-        <div className="landing-contacto-grid">
-          <div className="landing-contacto-item">
-            <span className="landing-contacto-icon">✉️</span>
-            <div>
-              <strong>{tx.emailLabel}</strong>
-              <a href="mailto:admin@wo.com">admin@wo.com</a>
-            </div>
-          </div>
-          <div className="landing-contacto-item">
-            <span className="landing-contacto-icon">📞</span>
-            <div>
-              <strong>{tx.telefonoLabel}</strong>
-              <a href="tel:+34604914588">604 91 45 88</a>
-            </div>
-          </div>
-          <div className="landing-contacto-item">
-            <span className="landing-contacto-icon">🕐</span>
-            <div>
-              <strong>{tx.horarioLabel}</strong>
-              <span>{tx.horarioVal}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="landing-cta">
-        <h2>{tx.ctaH2}</h2>
-        <p>{tx.ctaP}</p>
-        <button className="landing-btn-primary" style={{ fontSize: '16px', padding: '14px 36px' }} onClick={onRegister}>
-          {tx.btnPrimary}
+        <button className="landing-btn-nav" onClick={onLogin}>
+          {tx.navLogin}
         </button>
-      </section>
+      </nav>
+ 
+
+      <main id="top">
+        <section className="landing-hero">
+          <div className="landing-hero-overlay" />
+ 
+
+          <div className="landing-hero-content">
+            <h1 className="landing-hero-title">
+              <span>{tx.heroTitle1}</span>
+              <span>{tx.heroTitle2}</span>
+              <span className="landing-hero-title-accent">{tx.heroTitle3}</span>
+            </h1>
+ 
+
+            <div className="landing-hero-actions">
+              <button className="landing-btn-primary" onClick={onRegister}>
+                {tx.heroBtnPrimary}
+              </button>
+              <button className="landing-btn-secondary" onClick={onLogin}>
+                {tx.heroBtnSecondary}
+              </button>
+            </div>
+ 
+
+            <div className="landing-hero-features">
+              <span>✔ {tx.heroFeature1}</span>
+              <span>✔ {tx.heroFeature2}</span>
+              <span>✔ {tx.heroFeature3}</span>
+            </div>
+          </div>
+        </section>
+ 
+
+        <section className="landing-servicios" id="servicios">
+          <div className="landing-section-head">
+            <span>{tx.serviciosKicker}</span>
+            <h2>{tx.serviciosTitle}</h2>
+          </div>
+ 
+
+          <div className="landing-services-grid">
+            {tx.servicios.map(([icon, title, desc], index) => (
+              <article
+                className={`landing-service-card service-${index}`}
+                key={title}
+              >
+                <div className="landing-service-icon">
+                  {icon}
+                </div>
+
+                <h3>{title}</h3>
+                <p>{desc}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+ 
+
+        <section className="landing-flow" id="flujo">
+          <div className="landing-section-head">
+            <span>{tx.flujoKicker}</span>
+            <h2>{tx.flujoTitle}</h2>
+          </div>
+ 
+
+          <div className="landing-flow-track">
+            {tx.pasos.map(([num, title], index) => (
+              <div className="landing-flow-step" key={num}>
+                <div className="landing-flow-node">{num}</div>
+                <div className="landing-flow-card">
+                  <h3>{title}</h3>
+                </div>
+                {index !== tx.pasos.length - 1 && <div className="landing-flow-line" />}
+              </div>
+            ))}
+          </div>
+        </section>
+ 
+
+        <section className="landing-project" id="proyecto">
+          <div className="landing-section-head">
+            <span>{tx.proyectoKicker}</span>
+            <h2>{tx.proyectoTitle}</h2>
+            <p>{tx.proyectoText}</p>
+          </div>
+ 
+
+          <div className="landing-founders">
+            <FounderCard
+              imageSrc="/omayma.jpg"
+              fallback="O"
+              role={tx.omaymaRole}
+              name="Omayma Zemmouri"
+              desc={tx.omaymaDesc}
+            />
+ 
+
+            <FounderCard
+              imageSrc="/wasima.png"
+              fallback="W"
+              role={tx.wasimaRole}
+              name="Wasima El Ouastani"
+              desc={tx.wasimaDesc}
+            />
+          </div>
+        </section>
+ 
+
+        <section className="landing-contact" id="contacto">
+          <div className="landing-section-head">
+            <span>{tx.contactoKicker}</span>
+            <h2>{tx.contactoTitle}</h2>
+          </div>
+ 
+
+          <div className="landing-contact-grid">
+            <div className="landing-contact-card">
+              <div className="landing-contact-icon">✉️</div>
+              <div>
+                <strong>{tx.emailLabel}</strong>
+                <a href="mailto:admin@wo.com">admin@wo.com</a>
+              </div>
+            </div>
+ 
+
+            <div className="landing-contact-card">
+              <div className="landing-contact-icon">📞</div>
+              <div>
+                <strong>{tx.phoneLabel}</strong>
+                <a href="tel:+34604914588">604 91 45 88</a>
+              </div>
+            </div>
+ 
+
+            <div className="landing-contact-card">
+              <div className="landing-contact-icon">🕐</div>
+              <div>
+                <strong>{tx.hoursLabel}</strong>
+                <span>{tx.hoursValue}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+ 
+
+        <section className="landing-cta">
+          <div className="landing-cta-box">
+            <span>{tx.ctaKicker}</span>
+            <h2>{tx.ctaTitle}</h2>
+            <p>{tx.ctaText}</p>
+            <button className="landing-btn-primary landing-btn-primary-cta" onClick={onRegister}>
+              {tx.heroBtnPrimary}
+            </button>
+          </div>
+        </section>
+      </main>
+ 
 
       <footer className="landing-footer">
-        <img src="/logo.png" alt="W&O" style={{ height: '36px', objectFit: 'contain', opacity: 0.6 }} />
-        <div>
-          <p>{tx.footerRights}</p>
-          <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '4px' }}>{tx.footerDev}</p>
+        <div className="landing-footer-left">
+          <img src="/logo.png" alt="W&O" className="landing-footer-logo" />
+          <div>
+            <p>{tx.footerRights}</p>
+            <p className="landing-footer-dev">{tx.footerDev}</p>
+          </div>
+        </div>
+ 
+
+        <div className="landing-footer-links">
+          <a href="#servicios">{tx.navServicios}</a>
+          <a href="#flujo">{tx.navFlujo}</a>
+          <a href="#proyecto">{tx.navProyecto}</a>
+          <a href="#contacto">{tx.navContacto}</a>
         </div>
       </footer>
-
     </div>
   )
 }
+ 
 
 export default Landing
