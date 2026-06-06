@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import jsPDF from 'jspdf' // Asegúrate de tener importado jsPDF si lo usas directamente
+import jsPDF from 'jspdf'
 
 function ClienteView({
   tab, setTab, sesion,
@@ -8,7 +8,7 @@ function ClienteView({
   authConfig, notify,
   onSave, form, setForm, mostrarForm, setMostrarForm,
   editando, setEditando, emptyFormByTab, cargarDatosCliente,
-  onEdit, onDelete // Recibimos las funciones de edición y borrado desde App
+  onEdit, onDelete
 }) {
 
   const [mostrarMensaje, setMostrarMensaje] = useState(false)
@@ -93,6 +93,17 @@ function ClienteView({
       .catch(() => notify('Error al actualizar perfil', 'err'))
   }
 
+  const prepararSolicitudPresupuesto = () => {
+    setForm({
+      fecha: new Date().toISOString().split('T')[0],
+      total: 0,
+      estado: 'PENDIENTE',
+      vehiculoId: ''
+    })
+    setEditando(null)
+    setMostrarForm(true)
+  }
+
   return (
     <div className="cliente-view-wrapper">
       <h1 className="dashboard-welcome">Bienvenido, {sesion.nombre}</h1>
@@ -135,7 +146,8 @@ function ClienteView({
           </div>
           <div className="panel-seccion">
             <h3>Acciones rápidas</h3>
-             <button className="login-btn" style={{ marginBottom: '10px' }} onClick={() => { setTab('citas'); setForm(emptyFormByTab('citas','CLIENTE')); setMostrarForm(true) }}>📅 Solicitar cita</button>
+            <button className="login-btn" style={{ marginBottom: '10px' }} onClick={() => { setTab('citas'); setForm(emptyFormByTab('citas','CLIENTE')); setMostrarForm(true) }}>📅 Solicitar cita</button>
+            <button className="login-btn" style={{ marginBottom: '10px', background: 'var(--accent)' }} onClick={() => { setTab('presupuestos'); prepararSolicitudPresupuesto(); }}>📋 Solicitar presupuesto</button>
             <button className="btn-cancel" style={{ width: '100%', padding: '12px', borderRadius: '10px' }} onClick={() => setMostrarMensaje(true)}>✉️ Enviar mensaje al taller</button>
           </div>
         </div>
@@ -225,15 +237,39 @@ function ClienteView({
 
       {tab === 'presupuestos' && (
         <div className="panel-seccion">
-          <h3>📋 Mis Presupuestos</h3>
-          {presupuestos.length === 0 ? <p className="empty-text">Sin presupuestos.</p> : presupuestos.map(p => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3>📋 Mis Presupuestos</h3>
+            <button className="login-btn" onClick={prepararSolicitudPresupuesto}>+ Solicitar Presupuesto</button>
+          </div>
+
+          {presupuestos.length === 0 ? <p className="empty-text">Sin presupuestos registrados.</p> : presupuestos.map(p => (
             <div className="tarjeta-dato" key={p.id}>
               <label>Presupuesto #{p.id} — {p.fecha}</label>
-               <span style={{ fontSize: '22px', fontWeight: '900' }}>{p.total}€</span>
+               <span style={{ fontSize: '22px', fontWeight: '900' }}>{p.total === 0 ? 'Evaluando...' : `${p.total}€`}</span>
               <span className={`badge badge-${p.estado?.toLowerCase()}`}>{p.estado}</span>
-              {p.vehiculo && <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Vehículo: {p.vehiculo.matricula}</span>}
+              {p.vehiculo && <span style={{ fontSize: '13px', color: 'var(--muted)', display: 'block', marginTop: '4px' }}>Vehículo: {p.vehiculo.matricula} ({p.vehiculo.marca} {p.vehiculo.modelo})</span>}
             </div>
           ))}
+
+          {mostrarForm && (
+            <form onSubmit={onSave} style={{ marginTop: '20px', borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
+              <h4>Nueva solicitud de estimación</h4>
+              <div className="form-grid">
+                <div className="field">
+                  <label>Selecciona cuál de tus vehículos requiere reparación</label>
+                  <select value={form.vehiculoId || ''} onChange={e => setForm(p => ({ ...p, vehiculoId: e.target.value, vehiculo: { id: e.target.value } }))} required>
+                    <option value="">Seleccionar vehículo</option>
+                    {vehiculos.map(v => <option key={v.id} value={v.id}>{v.matricula} - {v.marca} {v.modelo}</option>)}
+                  </select>
+                </div>
+              </div>
+              <input type="hidden" value={form.estado || 'PENDIENTE'} />
+              <div className="form-actions" style={{ marginTop: '15px' }}>
+                <button className="login-btn" type="submit">Enviar al Taller</button>
+                <button type="button" className="btn-cancel" onClick={() => setMostrarForm(false)}>Cancelar</button>
+              </div>
+            </form>
+          )}
         </div>
       )}
 
@@ -295,4 +331,4 @@ function ClienteView({
   )
 }
 
-export default ClienteView
+export default ClienteView;

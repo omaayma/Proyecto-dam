@@ -78,9 +78,7 @@ public class Seguridad {
                         .requestMatchers(HttpMethod.DELETE, "/api/clientes/**").hasAnyRole("ADMIN", "EMPLEADO")
                         .requestMatchers("/api/piezas/**").hasAnyRole("ADMIN", "EMPLEADO")
                         .requestMatchers("/api/facturas/**").hasAnyRole("ADMIN", "EMPLEADO")
-                        .requestMatchers("/api/presupuestos/**").hasAnyRole("ADMIN", "EMPLEADO")
-
-                        // ADMIN, EMPLEADO y CLIENTE
+                        .requestMatchers("/api/presupuestos/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
                         .requestMatchers("/api/vehiculos/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
                         .requestMatchers("/api/citas/**").hasAnyRole("ADMIN", "EMPLEADO", "CLIENTE")
 

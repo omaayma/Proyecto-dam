@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
  
-
 const t = {
   es: {
     navServicios: 'Servicios',
@@ -8,7 +7,6 @@ const t = {
     navProyecto: 'Proyecto',
     navContacto: 'Contacto',
     navLogin: 'Iniciar sesión',
- 
 
     heroKicker: 'W&O AUTOGROUP',
     heroTitle1: 'Cuidamos tu coche',
@@ -19,7 +17,6 @@ const t = {
     heroFeature1: 'Diagnóstico rápido',
     heroFeature2: 'Sin esperas',
     heroFeature3: 'Transparencia total',
- 
 
     serviciosKicker: 'Servicios',
     serviciosTitle: 'Nuestros servicios',
@@ -31,7 +28,6 @@ const t = {
       ['📅', 'Cita online', 'Reserva tu cita desde la plataforma sin llamadas.'],
       ['🧾', 'Facturación', 'Consulta y descarga tus facturas cuando quieras.'],
     ],
- 
 
     flujoKicker: 'Cómo funciona',
     flujoTitle: 'Una experiencia simple y clara',
@@ -40,7 +36,6 @@ const t = {
       ['02', 'Solicita tu cita'],
       ['03', 'Sigue el servicio'],
     ],
- 
 
     proyectoKicker: 'Proyecto',
     proyectoTitle: 'Detrás de W&O',
@@ -50,15 +45,14 @@ const t = {
     omaymaDesc: 'Parte funcional, lógica de negocio y estructura de datos.',
     wasimaRole: 'Frontend & diseño',
     wasimaDesc: 'Interfaz, experiencia visual e identidad de la aplicación.',
- 
 
     contactoKicker: 'Contacto',
     contactoTitle: 'Contacto',
     emailLabel: 'Email',
+    emailValue: 'woautogroup@gmail.com',
     phoneLabel: 'Teléfono',
     hoursLabel: 'Horario',
     hoursValue: 'Lunes a viernes · 9:00 – 19:00',
- 
 
     ctaKicker: 'Empieza hoy',
     ctaTitle: 'Gestiona tu taller con una experiencia más visual',
@@ -66,7 +60,6 @@ const t = {
     footerRights: '© 2026 W&O Autogroup · Todos los derechos reservados',
     footerDev: 'Desarrollado por Omayma Zemmouri y Wasima El Ouastani · Proyecto DAM 2026',
   },
- 
 
   en: {
     navServicios: 'Services',
@@ -74,7 +67,6 @@ const t = {
     navProyecto: 'Project',
     navContacto: 'Contact',
     navLogin: 'Log in',
- 
 
     heroKicker: 'W&O AUTOGROUP',
     heroTitle1: 'We take care of your car',
@@ -85,7 +77,6 @@ const t = {
     heroFeature1: 'Fast diagnosis',
     heroFeature2: 'No waiting',
     heroFeature3: 'Full transparency',
- 
 
     serviciosKicker: 'Services',
     serviciosTitle: 'Our services',
@@ -97,7 +88,6 @@ const t = {
       ['📅', 'Online booking', 'Book your appointment through the platform.'],
       ['🧾', 'Invoicing', 'View and download your invoices anytime.'],
     ],
- 
 
     flujoKicker: 'How it works',
     flujoTitle: 'A simple and clear experience',
@@ -106,7 +96,6 @@ const t = {
       ['02', 'Request your booking'],
       ['03', 'Track the service'],
     ],
- 
 
     proyectoKicker: 'Project',
     proyectoTitle: 'Behind W&O',
@@ -116,15 +105,14 @@ const t = {
     omaymaDesc: 'Functional structure, business logic and data layer.',
     wasimaRole: 'Frontend & design',
     wasimaDesc: 'Interface, visual experience and application identity.',
- 
 
     contactoKicker: 'Contact',
     contactoTitle: 'Contact',
     emailLabel: 'Email',
+    emailValue: 'woautogroup@gmail.com',
     phoneLabel: 'Phone',
     hoursLabel: 'Hours',
     hoursValue: 'Monday to Friday · 9:00 – 19:00',
- 
 
     ctaKicker: 'Start today',
     ctaTitle: 'Manage your workshop with a more visual experience',
@@ -133,11 +121,9 @@ const t = {
     footerDev: 'Developed by Omayma Zemmouri and Wasima El Ouastani · DAM Project 2026',
   },
 }
- 
 
 function FounderCard({ imageSrc, fallback, role, name, desc }) {
   const [imgError, setImgError] = useState(false)
- 
 
   return (
     <article className="landing-founder-card">
@@ -153,7 +139,6 @@ function FounderCard({ imageSrc, fallback, role, name, desc }) {
           <div className="landing-founder-fallback">{fallback}</div>
         )}
       </div>
- 
 
       <span className="landing-founder-role">{role}</span>
       <h3>{name}</h3>
@@ -161,23 +146,19 @@ function FounderCard({ imageSrc, fallback, role, name, desc }) {
     </article>
   )
 }
- 
 
 function Landing({ onLogin, onRegister, idioma }) {
   const tx = t[idioma] || t.es
- 
 
   return (
     <div className="landing-wrapper">
       <div className="landing-bg-blur landing-bg-blur-red" />
       <div className="landing-bg-blur landing-bg-blur-dark" />
- 
 
       <nav className="landing-nav">
         <a href="#top" className="landing-brand">
           <img src="/logo.png" alt="W&O Autogroup" className="landing-logo" />
         </a>
- 
 
         <div className="landing-nav-links">
           <a href="#servicios">{tx.navServicios}</a>
@@ -185,18 +166,15 @@ function Landing({ onLogin, onRegister, idioma }) {
           <a href="#proyecto">{tx.navProyecto}</a>
           <a href="#contacto">{tx.navContacto}</a>
         </div>
- 
 
         <button className="landing-btn-nav" onClick={onLogin}>
           {tx.navLogin}
         </button>
       </nav>
- 
 
       <main id="top">
         <section className="landing-hero">
           <div className="landing-hero-overlay" />
- 
 
           <div className="landing-hero-content">
             <h1 className="landing-hero-title">
@@ -204,7 +182,6 @@ function Landing({ onLogin, onRegister, idioma }) {
               <span>{tx.heroTitle2}</span>
               <span className="landing-hero-title-accent">{tx.heroTitle3}</span>
             </h1>
- 
 
             <div className="landing-hero-actions">
               <button className="landing-btn-primary" onClick={onRegister}>
@@ -214,7 +191,6 @@ function Landing({ onLogin, onRegister, idioma }) {
                 {tx.heroBtnSecondary}
               </button>
             </div>
- 
 
             <div className="landing-hero-features">
               <span>✔ {tx.heroFeature1}</span>
@@ -223,14 +199,12 @@ function Landing({ onLogin, onRegister, idioma }) {
             </div>
           </div>
         </section>
- 
 
         <section className="landing-servicios" id="servicios">
           <div className="landing-section-head">
             <span>{tx.serviciosKicker}</span>
             <h2>{tx.serviciosTitle}</h2>
           </div>
- 
 
           <div className="landing-services-grid">
             {tx.servicios.map(([icon, title, desc], index) => (
@@ -241,21 +215,18 @@ function Landing({ onLogin, onRegister, idioma }) {
                 <div className="landing-service-icon">
                   {icon}
                 </div>
-
                 <h3>{title}</h3>
                 <p>{desc}</p>
               </article>
             ))}
           </div>
         </section>
- 
 
         <section className="landing-flow" id="flujo">
           <div className="landing-section-head">
             <span>{tx.flujoKicker}</span>
             <h2>{tx.flujoTitle}</h2>
           </div>
- 
 
           <div className="landing-flow-track">
             {tx.pasos.map(([num, title], index) => (
@@ -269,7 +240,6 @@ function Landing({ onLogin, onRegister, idioma }) {
             ))}
           </div>
         </section>
- 
 
         <section className="landing-project" id="proyecto">
           <div className="landing-section-head">
@@ -277,17 +247,15 @@ function Landing({ onLogin, onRegister, idioma }) {
             <h2>{tx.proyectoTitle}</h2>
             <p>{tx.proyectoText}</p>
           </div>
- 
 
           <div className="landing-founders">
             <FounderCard
-              imageSrc="/omayma.jpg"
+              imageSrc="/omayma.png"
               fallback="O"
               role={tx.omaymaRole}
               name="Omayma Zemmouri"
               desc={tx.omaymaDesc}
             />
- 
 
             <FounderCard
               imageSrc="/wasima.png"
@@ -298,24 +266,21 @@ function Landing({ onLogin, onRegister, idioma }) {
             />
           </div>
         </section>
- 
 
         <section className="landing-contact" id="contacto">
           <div className="landing-section-head">
             <span>{tx.contactoKicker}</span>
             <h2>{tx.contactoTitle}</h2>
           </div>
- 
 
           <div className="landing-contact-grid">
             <div className="landing-contact-card">
               <div className="landing-contact-icon">✉️</div>
               <div>
                 <strong>{tx.emailLabel}</strong>
-                <a href="mailto:admin@wo.com">admin@wo.com</a>
+                <a href={`mailto:${tx.emailValue}`}>{tx.emailValue}</a>
               </div>
             </div>
- 
 
             <div className="landing-contact-card">
               <div className="landing-contact-icon">📞</div>
@@ -324,7 +289,6 @@ function Landing({ onLogin, onRegister, idioma }) {
                 <a href="tel:+34604914588">604 91 45 88</a>
               </div>
             </div>
- 
 
             <div className="landing-contact-card">
               <div className="landing-contact-icon">🕐</div>
@@ -335,7 +299,6 @@ function Landing({ onLogin, onRegister, idioma }) {
             </div>
           </div>
         </section>
- 
 
         <section className="landing-cta">
           <div className="landing-cta-box">
@@ -348,7 +311,6 @@ function Landing({ onLogin, onRegister, idioma }) {
           </div>
         </section>
       </main>
- 
 
       <footer className="landing-footer">
         <div className="landing-footer-left">
@@ -358,7 +320,6 @@ function Landing({ onLogin, onRegister, idioma }) {
             <p className="landing-footer-dev">{tx.footerDev}</p>
           </div>
         </div>
- 
 
         <div className="landing-footer-links">
           <a href="#servicios">{tx.navServicios}</a>
@@ -370,6 +331,5 @@ function Landing({ onLogin, onRegister, idioma }) {
     </div>
   )
 }
- 
 
 export default Landing

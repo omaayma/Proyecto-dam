@@ -93,7 +93,7 @@ function App() {
     const cfg = authConfig()
     axios.get('/api/vehiculos',    cfg).then(r => setVehiculosCliente(r.data.filter(v => v?.cliente?.id === sesion.clienteId))).catch(() => {})
     axios.get('/api/citas',        cfg).then(r => setCitasCliente(r.data.filter(c => c?.vehiculo?.cliente?.id === sesion.clienteId))).catch(() => {})
-    axios.get('/api/presupuestos', cfg).then(r => setPresupuestosCliente(r.data.filter(p => p?.vehiculo?.cliente?.id === sesion.clienteId))).catch(() => {})
+    axios.get(`/api/presupuestos/cliente/${sesion.clienteId}`, cfg).then(r => setPresupuestosCliente(r.data)).catch(() => {})
     axios.get('/api/facturas',     cfg).then(r => setFacturasCliente(r.data)).catch(() => {})
   }
 
@@ -205,17 +205,23 @@ function App() {
 
   const onEdit = (item) => {
     setEditando(item)
-    if (tab === 'citas') {
-      setForm({ ...item, vehiculoId: item?.vehiculo?.id || '', empleadoId: item?.empleado?.id || '', vehiculo: undefined, empleado: undefined })
-    } else if (tab === 'presupuestos') {
-      setForm({ ...item, vehiculoId: item?.vehiculo?.id || '', vehiculo: undefined })
-    } else if (tab === 'facturas') {
-      setForm({ ...item, presupuestoId: item?.presupuesto?.id || '', presupuesto: undefined })
-    } else if (tab === 'vehiculos') {
-       setForm({ ...item, clienteId: item?.cliente?.id || '', cliente: undefined })
-    } else {
-      setForm({ ...item })
-    }
+    const datosForm = { ...item }
+
+    if (item?.vehiculo?.id)    datosForm.vehiculoId    = item.vehiculo.id
+    if (item?.empleado?.id)    datosForm.empleadoId    = item.empleado.id
+    if (item?.cliente?.id)     datosForm.clienteId     = item.cliente.id
+    if (item?.presupuesto?.id) datosForm.presupuestoId = item.presupuesto.id
+
+    delete datosForm.vehiculo
+    delete datosForm.empleado
+    delete datosForm.cliente
+    delete datosForm.presupuesto
+    delete datosForm.citas
+    delete datosForm.presupuestos
+    delete datosForm.facturas
+    delete datosForm.piezas
+
+    setForm(datosForm)
     setMostrarForm(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -253,10 +259,23 @@ function App() {
         body.estado = body.estado || 'PENDIENTE'
       }
     }
-    if (body.vehiculoId)    { body.vehiculo    = { id: parseInt(body.vehiculoId) }; delete body.vehiculoId }
-    if (body.empleadoId)    { body.empleado    = { id: parseInt(body.empleadoId) }; delete body.empleadoId }
-    if (body.clienteId)     { body.cliente     = { id: parseInt(body.clienteId) }; delete body.clienteId }
-    if (body.presupuestoId) { body.presupuesto = { id: parseInt(body.presupuestoId) }; delete body.presupuestoId }
+
+    if (body.vehiculoId || form.vehiculo?.id) {
+      body.vehiculo = { id: parseInt(body.vehiculoId || form.vehiculo.id) };
+      delete body.vehiculoId;
+    }
+    if (body.empleadoId || form.empleado?.id) {
+      body.empleado = { id: parseInt(body.empleadoId || form.empleado.id) };
+      delete body.empleadoId;
+    }
+    if (body.clienteId || form.cliente?.id) {
+      body.cliente = { id: parseInt(body.clienteId || form.cliente.id) };
+      delete body.clienteId;
+    }
+    if (body.presupuestoId || form.presupuesto?.id) {
+      body.presupuesto = { id: parseInt(body.presupuestoId || form.presupuesto.id) };
+      delete body.presupuestoId;
+    }
 
     const req = editando
       ? axios.put(`/api/${tab}/${editando.id}`, body, authConfig())
@@ -455,7 +474,7 @@ function App() {
                       if (key === 'vehiculoId') return (
                         <div className="field" key={key}>
                           <label>Vehículo</label>
-                          <select value={form.vehiculoId || ''} onChange={e => setForm(prev => ({ ...prev, presidentialId: e.target.value, vehiculoId: e.target.value }))}>
+                          <select value={form.vehiculoId || ''} onChange={e => setForm(prev => ({ ...prev, vehiculoId: e.target.value }))}>
                             <option value="">Seleccionar vehículo</option>
                             {vehiculos.map(v => <option key={v.id} value={v.id}>{v.matricula} - {v.marca} {v.modelo}</option>)}
                           </select>

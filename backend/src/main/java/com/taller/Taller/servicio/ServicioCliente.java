@@ -1,9 +1,12 @@
 package com.taller.Taller.servicio;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import com.taller.Taller.modelo.Cliente;
 import com.taller.Taller.repositorio.RepositorioCliente;
 
@@ -16,6 +19,8 @@ public class ServicioCliente {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private final RestTemplate restTemplate = new RestTemplate();
+
     public List<Cliente> listarClientes() {
         return repositorio.findAll();
     }
@@ -24,11 +29,25 @@ public class ServicioCliente {
         if (cliente.getContrasena() == null || cliente.getContrasena().isBlank()) {
             throw new IllegalArgumentException("La contraseña no puede estar vacía");
         }
-        // Solo encodea si no está ya encriptada (evita doble encodeo en actualizaciones)
+
         if (!cliente.getContrasena().startsWith("$2a$")) {
             cliente.setContrasena(passwordEncoder.encode(cliente.getContrasena()));
         }
-        return repositorio.save(cliente);
+
+        Cliente clienteGuardado = repositorio.save(cliente);
+
+        try {
+            Map<String, Object> datosN8n = new HashMap<>();
+            datosN8n.put("nombre", clienteGuardado.getNombre());
+            datosN8n.put("email", clienteGuardado.getEmail());
+
+            String urlN8n = "http://localhost:5678/webhook/bienvenida-cliente";
+            restTemplate.postForObject(urlN8n, datosN8n, String.class);
+        } catch (Exception e) {
+            System.err.println("Error n8n Bienvenida: " + e.getMessage());
+        }
+
+        return clienteGuardado;
     }
 
     public Cliente actualizarCliente(Long id, Cliente clienteNuevo) {
@@ -42,7 +61,6 @@ public class ServicioCliente {
         clienteExistente.setTelefono(clienteNuevo.getTelefono());
         clienteExistente.setDireccion(clienteNuevo.getDireccion());
 
-        // Solo se actualiza la contraseña si viene una nueva, si no conserva la anterior
         if (clienteNuevo.getContrasena() != null
                 && !clienteNuevo.getContrasena().isBlank()
                 && !clienteNuevo.getContrasena().startsWith("$2a$")) {
